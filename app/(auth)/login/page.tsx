@@ -2,14 +2,12 @@
 
 import LoginForm from "../_components/LoginForm";
 
-export default function Page() {
-    return (
-        <div className="space-y-6 w-full">
-            <div className="text-center">
-                <h1 className="text-2xl font-semibold">Welcome back</h1>
-                <p className="mt-1 text-sm text-foreground/70">Log in to your account</p>
-            </div>
-            <LoginForm />
-        </div>
-    );
+export default function LoginPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-pink-100 to-red-100 px-4">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
+        <LoginForm />
+      </div>
+    </div>
+  );
 }

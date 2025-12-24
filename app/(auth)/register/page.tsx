@@ -2,14 +2,12 @@
 
 import RegisterForm from "../_components/RegisterForm";
 
-export default function Page() {
-    return (
-        <div className="space-y-6 w-full">
-            <div className="text-center">
-                <h1 className="text-2xl font-semibold">Create your account</h1>
-                <p className="mt-1 text-sm text-foreground/70">Sign up to get started</p>
-            </div>
-            <RegisterForm />
-        </div>
-    );
+export default function RegisterPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-pink-100 to-red-100 px-4">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
+        <RegisterForm />
+      </div>
+    </div>
+  );
 }
