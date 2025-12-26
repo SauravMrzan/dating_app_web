@@ -20,10 +20,10 @@ export default function RegisterForm() {
     mode: "onSubmit",
   });
 
-  const [pending, setTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
 
   const submit = async (values: RegisterData) => {
-    setTransition(async () => {
+    startTransition(async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       router.push("/login");
     });
@@ -32,94 +32,88 @@ export default function RegisterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-5">
+    <form onSubmit={handleSubmit(submit)} className="space-y-4">
       {/* Logo */}
-      <div className="flex justify-center">
-        <Image
-          src="/images/imglogo.png"
-          alt="Dating App Logo"
-          width={200}
-          height={200}
-          className="scale-75 -mb-6"
-          priority
-        />
+      <div className="flex justify-center -mb-1">
+        <div className="flex justify-center -mb-6 -mt-4">
+          <Image
+            src="/images/imglogo.png"
+            alt="Mannmilap Logo"
+            width={160}
+            height={160}
+            className="block"
+            priority
+          />
+        </div>
       </div>
 
-      {/* Header */}
-      <div className="text-center space-y-1">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Create Your Profile
-        </h1>
-        <p className="text-sm text-gray-600">
-          Find a partner who shares your values and culture
-        </p>
+      {/* Title */}
+      <div className="text-center leading-tight">
+        <h1 className="text-xl font-bold text-gray-900">Create your account</h1>
+        <p className="text-sm text-rose-500">Find a meaningful connection 💖</p>
       </div>
 
-      {/* Full Name */}
+      {/* Name */}
       <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Full Name</label>
+        <label className="text-sm font-medium text-gray-700">Full name</label>
         <input
           {...register("name")}
           placeholder="Your full name"
           className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm
-          placeholder:text-rose-200
-          outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
+          placeholder:text-rose-300
+          focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
         />
         {errors.name && (
-          <p className="text-xs text-red-600">{errors.name.message}</p>
+          <p className="text-xs text-red-500">{errors.name.message}</p>
         )}
       </div>
 
       {/* Email */}
       <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">
-          Email Address
-        </label>
+        <label className="text-sm font-medium text-gray-700">Email</label>
         <input
           {...register("email")}
-          placeholder="example@email.com"
+          placeholder="you@example.com"
           className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm
-          placeholder:text-rose-200
-          outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
+          placeholder:text-rose-300
+          focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
         />
         {errors.email && (
-          <p className="text-xs text-red-600">{errors.email.message}</p>
+          <p className="text-xs text-red-500">{errors.email.message}</p>
         )}
       </div>
 
       {/* Password */}
       <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">
-          Create Password
-        </label>
+        <label className="text-sm font-medium text-gray-700">Password</label>
         <input
-          {...register("password")}
           type="password"
+          {...register("password")}
           placeholder="Minimum 6 characters"
           className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm
-          placeholder:text-rose-200
-          outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
+          placeholder:text-rose-300
+          focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
         />
         {errors.password && (
-          <p className="text-xs text-red-600">{errors.password.message}</p>
+          <p className="text-xs text-red-500">{errors.password.message}</p>
         )}
       </div>
 
       {/* Confirm Password */}
       <div className="space-y-1">
         <label className="text-sm font-medium text-gray-700">
-          Confirm Password
+          Confirm password
         </label>
         <input
-          {...register("confirmPassword")}
           type="password"
-          placeholder="Re-enter your password"
+          {...register("confirmPassword")}
+          placeholder="Re-enter password"
           className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm
-          placeholder:text-rose-200
-          outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
+          placeholder:text-rose-300
+          focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
         />
         {errors.confirmPassword && (
-          <p className="text-xs text-red-600">
+          <p className="text-xs text-red-500">
             {errors.confirmPassword.message}
           </p>
         )}
@@ -129,23 +123,22 @@ export default function RegisterForm() {
       <button
         type="submit"
         disabled={isSubmitting || pending}
-        className="h-11 w-full rounded-lg bg-rose-600 text-white font-semibold
-          placeholder:text-rose-200
-        hover:bg-rose-700 transition disabled:opacity-60"
+        className="h-11 w-full rounded-lg bg-rose-500 text-white font-semibold
+        hover:bg-rose-600 transition disabled:opacity-60"
       >
         {isSubmitting || pending
           ? "Creating your profile..."
-          : "Create Profile"}
+          : "Create account"}
       </button>
 
-      {/* Login */}
+      {/* Login link */}
       <p className="text-center text-sm text-gray-600">
-        Already registered?{" "}
+        Already have an account?{" "}
         <Link
           href="/login"
           className="font-semibold text-rose-600 hover:underline"
         >
-          Sign in
+          Log in
         </Link>
       </p>
     </form>
