@@ -34,7 +34,7 @@ export default function RegisterForm() {
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-4">
       {/* Logo */}
-      <div className="flex justify-center -mb-1">
+      <Link href = "/"  className="flex justify-center -mb-1">
         <div className="flex justify-center -mb-6 -mt-4">
           <Image
             src="/images/imglogo.png"
@@ -45,7 +45,7 @@ export default function RegisterForm() {
             priority
           />
         </div>
-      </div>
+      </Link>
 
       {/* Title */}
       <div className="text-center leading-tight">
@@ -59,7 +59,8 @@ export default function RegisterForm() {
         <input
           {...register("name")}
           placeholder="Your full name"
-          className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm
+          className="h-11 w-full rounded-lg border border-gray-600 px-3 text-sm
+       text-gray-900
           placeholder:text-rose-300
           focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
         />
@@ -74,7 +75,7 @@ export default function RegisterForm() {
         <input
           {...register("email")}
           placeholder="you@example.com"
-          className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm
+          className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm  text-gray-900
           placeholder:text-rose-300
           focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
         />
@@ -90,7 +91,7 @@ export default function RegisterForm() {
           type="password"
           {...register("password")}
           placeholder="Minimum 6 characters"
-          className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm
+          className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm  text-gray-900
           placeholder:text-rose-300
           focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
         />
@@ -108,7 +109,7 @@ export default function RegisterForm() {
           type="password"
           {...register("confirmPassword")}
           placeholder="Re-enter password"
-          className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm
+          className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm  text-gray-900
           placeholder:text-rose-300
           focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
         />

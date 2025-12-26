@@ -25,7 +25,7 @@ export default function LoginForm() {
   const submit = async (values: LoginData) => {
     setTransition(async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      // router.push("/auth/dashboard");
+      router.push("/home");
     });
 
     console.log("login", values);
@@ -34,16 +34,18 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-5">
       {/* Logo */}
-      <div className="flex justify-center">
-        <Image
-          src="/images/imglogo.png"
-          alt="Dating App Logo"
-          width={200}
-          height={200}
-          className="scale-75 -mb-6"
-          priority
-        />
-      </div>
+      <Link href = "/"  className="flex justify-center -mb-1">
+        <div className="flex justify-center -mb-6 -mt-4">
+          <Image
+            src="/images/imglogo.png"
+            alt="Mannmilap Logo"
+            width={160}
+            height={160}
+            className="block"
+            priority
+          />
+        </div>
+      </Link>
 
       {/* Header */}
       <div className="text-center space-y-1">
