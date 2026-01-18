@@ -3,142 +3,325 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { RegisterData, registerSchema } from "../schema";
-import { useTransition } from "react";
+import { type RegisterData, registerSchema } from "../schema";
+import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
+const CULTURES = ["Brahmin", "Chhetri", "Newar", "Rai", "Magar", "Gurung"];
+const GENDERS = ["Male", "Female", "Other"];
+const INTERESTED_IN = ["Male", "Female", "Everyone"];
+
 export default function RegisterForm() {
   const router = useRouter();
+  const [step, setStep] = useState(1);
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    trigger, // 👈 used for step-wise validation
   } = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
-    mode: "onSubmit",
+    mode: "onTouched",
+    shouldUnregister: true,
+  
   });
 
   const [pending, startTransition] = useTransition();
 
   const submit = async (values: RegisterData) => {
     startTransition(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      router.push("/login");
-    });
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(values),
+        });
 
-    console.log("register", values);
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.message || "Registration failed");
+          return;
+        }
+
+        router.push("/login");
+      } catch (err) {
+        alert("Something went wrong. Try again.");
+      }
+    });
+  };
+
+  const goNext = async () => {
+    let fields: (keyof RegisterData)[] = [];
+
+    if (step === 1) {
+      fields = ["username", "email", "password", "confirmPassword"];
+    }
+
+    if (step === 2) {
+      fields = ["fullName", "gender", "dateOfBirth", "culture"];
+    }
+
+    const valid = await trigger(fields);
+    if (valid) setStep(step + 1);
   };
 
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-4">
+    <form onSubmit={handleSubmit(submit)} className="space-y-6">
       {/* Logo */}
-      <Link href = "/"  className="flex justify-center -mb-1">
-        <div className="flex justify-center -mb-6 -mt-4">
-          <Image
-            src="/images/imglogo.png"
-            alt="Mannmilap Logo"
-            width={160}
-            height={160}
-            className="block"
-            priority
-          />
-        </div>
-      </Link>
+      <div className="flex justify-center -mb-2 -mt-2">
+        <Image
+          src="/images/logoright.png"
+          alt="MannMilap Logo"
+          width={140}
+          height={140}
+          className="block"
+          priority
+        />
+      </div>
 
       {/* Title */}
       <div className="text-center leading-tight">
         <h1 className="text-xl font-bold text-gray-900">Create your account</h1>
-        <p className="text-sm text-rose-500">Find a meaningful connection 💖</p>
+        <p className="text-xs text-gray-600">Step {step} of 3</p>
       </div>
 
-      {/* Name */}
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Full name</label>
-        <input
-          {...register("name")}
-          placeholder="Your full name"
-          className="h-11 w-full rounded-lg border border-gray-600 px-3 text-sm
-       text-gray-900
-          placeholder:text-rose-300
-          focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
-        />
-        {errors.name && (
-          <p className="text-xs text-red-500">{errors.name.message}</p>
+      {/* Step 1 */}
+      {step === 1 && (
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-900">
+              Username
+            </label>
+            <input
+              {...register("username")}
+              placeholder="Choose a username"
+              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
+            />
+            {errors.username && (
+              <p className="text-xs text-red-500">{errors.username.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-900">Email</label>
+            <input
+              {...register("email")}
+              placeholder="you@example.com"
+              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
+            />
+            {errors.email && (
+              <p className="text-xs text-red-500">{errors.email.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-900">
+              Password
+            </label>
+            <input
+              type="password"
+              {...register("password")}
+              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
+            />
+            {errors.password && (
+              <p className="text-xs text-red-500">{errors.password.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-900">
+              Confirm password
+            </label>
+            <input
+              type="password"
+              {...register("confirmPassword")}
+              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
+            />
+            {errors.confirmPassword && (
+              <p className="text-xs text-red-500">
+                {errors.confirmPassword.message}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Step 2 */}
+      {step === 2 && (
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-900">
+              Full name
+            </label>
+            <input
+              {...register("fullName")}
+              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
+            />
+            {errors.fullName && (
+              <p className="text-xs text-red-500">{errors.fullName.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-900">Gender</label>
+            <select
+              {...register("gender")}
+              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
+            >
+              <option value="">Select gender</option>
+              {GENDERS.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </select>
+            {errors.gender && (
+              <p className="text-xs text-red-500">{errors.gender.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-900">
+              Date of birth
+            </label>
+            <input
+              type="date"
+              {...register("dateOfBirth")}
+              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
+            />
+            {errors.dateOfBirth && (
+              <p className="text-xs text-red-500">
+                {errors.dateOfBirth.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-900">
+              Your culture
+            </label>
+            <select
+              {...register("culture")}
+              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
+            >
+              <option value="">Select culture</option>
+              {CULTURES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            {errors.culture && (
+              <p className="text-xs text-red-500">{errors.culture.message}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Step 3 */}
+      {step === 3 && (
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-900">
+              Interested in
+            </label>
+            <select
+              {...register("interestedIn")}
+              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
+            >
+              <option value="">Select preference</option>
+              {INTERESTED_IN.map((i) => (
+                <option key={i} value={i}>
+                  {i}
+                </option>
+              ))}
+            </select>
+            {errors.interestedIn && (
+              <p className="text-xs text-red-500">
+                {errors.interestedIn.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-900">
+              Preferred cultures
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {CULTURES.map((culture) => (
+                <label key={culture} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    value={culture}
+                    {...register("preferredCulture")}
+                  />
+                  <span className="text-sm text-blue-700">{culture}</span>
+                </label>
+              ))}
+            </div>
+            {errors.preferredCulture && (
+              <p className="text-xs text-red-500">
+                {errors.preferredCulture.message}
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="number"
+              {...register("minPreferredAge", { valueAsNumber: true })}
+              placeholder="Min age"
+              className="h-10 w-full rounded-lg border px-3 text-sm text-blue-700"
+            />
+            <input
+              type="number"
+              {...register("maxPreferredAge", { valueAsNumber: true })}
+              placeholder="Max age"
+              className="h-10 w-full rounded-lg border px-3 text-sm text-blue-700"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <div className="flex gap-3 pt-4">
+        {step > 1 && (
+          <button
+            type="button"
+            onClick={() => setStep(step - 1)}
+            className="flex-1 h-10 rounded-lg border bg-blue-500"
+          >
+            Back
+          </button>
+        )}
+
+        {step < 3 ? (
+          <button
+            type="button"
+            onClick={goNext}
+            className="flex-1 h-10 rounded-lg bg-rose-500 "
+          >
+            Next
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={isSubmitting || pending}
+            className="flex-1 h-10 rounded-lg bg-rose-500 text-white"
+          >
+            {isSubmitting || pending ? "Creating..." : "Create account"}
+          </button>
         )}
       </div>
 
-      {/* Email */}
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Email</label>
-        <input
-          {...register("email")}
-          placeholder="you@example.com"
-          className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm  text-gray-900
-          placeholder:text-rose-300
-          focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
-        />
-        {errors.email && (
-          <p className="text-xs text-red-500">{errors.email.message}</p>
-        )}
-      </div>
-
-      {/* Password */}
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Password</label>
-        <input
-          type="password"
-          {...register("password")}
-          placeholder="Minimum 6 characters"
-          className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm  text-gray-900
-          placeholder:text-rose-300
-          focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
-        />
-        {errors.password && (
-          <p className="text-xs text-red-500">{errors.password.message}</p>
-        )}
-      </div>
-
-      {/* Confirm Password */}
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">
-          Confirm password
-        </label>
-        <input
-          type="password"
-          {...register("confirmPassword")}
-          placeholder="Re-enter password"
-          className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm  text-gray-900
-          placeholder:text-rose-300
-          focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
-        />
-        {errors.confirmPassword && (
-          <p className="text-xs text-red-500">
-            {errors.confirmPassword.message}
-          </p>
-        )}
-      </div>
-
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={isSubmitting || pending}
-        className="h-11 w-full rounded-lg bg-rose-500 text-white font-semibold
-        hover:bg-rose-600 transition disabled:opacity-60"
-      >
-        {isSubmitting || pending
-          ? "Creating your profile..."
-          : "Create account"}
-      </button>
-
-      {/* Login link */}
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-center text-sm text-rose-300">
         Already have an account?{" "}
-        <Link
-          href="/login"
-          className="font-semibold text-rose-600 hover:underline"
-        >
+        <Link href="/login" className="text-rose-600 font-semibold" >
           Log in
         </Link>
       </p>
