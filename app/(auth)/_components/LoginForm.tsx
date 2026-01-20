@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { LoginData, loginSchema } from "../schema";
 import { useTransition } from "react";
 import Image from "next/image";
+import axiosInstance from "../../../lib/api/axios"; // adjust path if needed
+import { API } from "../../../lib/api/endpoints"; // adjust path if needed
 
 export default function LoginForm() {
   const router = useRouter();
@@ -15,26 +17,43 @@ export default function LoginForm() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    setError,
   } = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
     mode: "onSubmit",
   });
 
-  const [pending, setTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
 
   const submit = async (values: LoginData) => {
-    setTransition(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      router.push("/home");
-    });
+    startTransition(async () => {
+      try {
+        const res = await axiosInstance.post(API.AUTH.LOGIN, values);
 
-    console.log("login", values);
+        // example expected response:
+        // { success: true, token: "...", user: {...} }
+
+        if (res.data?.success) {
+          router.push("/home");
+        } else {
+          setError("root", {
+            message: res.data?.message || "Login failed",
+          });
+        }
+      } catch (err: any) {
+        setError("root", {
+          message:
+            err?.response?.data?.message ||
+            "Unable to login. Please try again.",
+        });
+      }
+    });
   };
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-5">
       {/* Logo */}
-      <Link href = "/"  className="flex justify-center -mb-1">
+      <Link href="/" className="flex justify-center -mb-1">
         <div className="flex justify-center -mb-6 -mt-4">
           <Image
             src="/images/imglogo.png"
@@ -54,6 +73,13 @@ export default function LoginForm() {
           Sign in to continue your journey
         </p>
       </div>
+
+      {/* Global Error */}
+      {errors.root && (
+        <p className="text-center text-sm text-red-600">
+          {errors.root.message}
+        </p>
+      )}
 
       {/* Email */}
       <div className="space-y-1">
