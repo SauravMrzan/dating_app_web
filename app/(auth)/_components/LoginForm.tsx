@@ -2,141 +2,146 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, LoginData } from "../schema";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LoginData, loginSchema } from "../schema";
-import { useTransition } from "react";
-import Image from "next/image";
-import axiosInstance from "../../../lib/api/axios"; // adjust path if needed
-import { API } from "../../../lib/api/endpoints"; // adjust path if needed
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Heart,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
+import { useState } from "react";
+import { handleLogin } from "@/lib/actions/auth-action";
 
 export default function LoginForm() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
-    setError,
   } = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
-    mode: "onSubmit",
   });
 
-  const [pending, startTransition] = useTransition();
+  const passwordValue = watch("password");
 
-  const submit = async (values: LoginData) => {
-    startTransition(async () => {
-      try {
-        const res = await axiosInstance.post(API.AUTH.LOGIN, values);
+  const onSubmit = async (data: LoginData) => {
+    setErrorMsg("");
+    const result = await handleLogin(data);
 
-        // example expected response:
-        // { success: true, token: "...", user: {...} }
-
-        if (res.data?.success) {
-          router.push("/home");
-        } else {
-          setError("root", {
-            message: res.data?.message || "Login failed",
-          });
-        }
-      } catch (err: any) {
-        setError("root", {
-          message:
-            err?.response?.data?.message ||
-            "Unable to login. Please try again.",
-        });
-      }
-    });
+    if (result?.success) {
+      router.push("/home");
+    } else {
+      setErrorMsg(result?.message || "Invalid email or password");
+    }
   };
-
+  
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-5">
-      {/* Logo */}
-      <Link href="/" className="flex justify-center -mb-1">
-        <div className="flex justify-center -mb-6 -mt-4">
-          <Image
-            src="/images/imglogo.png"
-            alt="Mannmilap Logo"
-            width={160}
-            height={160}
-            className="block"
-            priority
-          />
+    <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl px-8 py-10 text-slate-900">
+
+     
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        
+        {/* Email */}
+        <div>
+          <label className="text-xs font-semibold text-slate-600">
+            Email Address
+          </label>
+          <div className="mt-1 flex items-center gap-2 bg-slate-100 px-4 h-[46px] rounded-xl focus-within:ring-2 focus-within:ring-rose-400">
+            <Mail size={16} className="text-slate-400" />
+            <input
+              {...register("email")}
+              placeholder="you@example.com"
+              className="w-full bg-transparent text-sm outline-none"
+            />
+          </div>
+          {errors.email && (
+            <p className="text-[11px] text-red-500 mt-1">
+              {errors.email.message}
+            </p>
+          )}
         </div>
-      </Link>
 
-      {/* Header */}
-      <div className="text-center space-y-1">
-        <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
-        <p className="text-sm text-gray-600">
-          Sign in to continue your journey
-        </p>
-      </div>
+        {/* Password */}
+        <div>
+          <label className="text-xs font-semibold text-slate-600">
+            Password
+          </label>
+          <div className="mt-1 flex items-center gap-2 bg-slate-100 px-4 h-[46px] rounded-xl focus-within:ring-2 focus-within:ring-rose-400">
+            <Lock size={16} className="text-slate-400" />
+            <input
+              {...register("password")}
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              className="w-full bg-transparent text-sm outline-none"
+            />
+            {passwordValue && (
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-slate-400 hover:text-rose-500"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            )}
+          </div>
+          {errors.password && (
+            <p className="text-[11px] text-red-500 mt-1">
+              {errors.password.message}
+            </p>
+          )}
+        </div>
 
-      {/* Global Error */}
-      {errors.root && (
-        <p className="text-center text-sm text-red-600">
-          {errors.root.message}
-        </p>
-      )}
+        {/* Forgot password */}
+        <div className="flex justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-[11px] text-slate-500 hover:text-rose-600"
+          >
+            Forgot password?
+          </Link>
+        </div>
 
-      {/* Email */}
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">
-          Email Address
-        </label>
-        <input
-          {...register("email")}
-          type="email"
-          autoComplete="email"
-          placeholder="example@email.com"
-          className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm
-          text-gray-900 placeholder:text-rose-500
-          outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
-        />
-        {errors.email && (
-          <p className="text-xs text-red-600">{errors.email.message}</p>
-        )}
-      </div>
-
-      {/* Password */}
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Password</label>
-        <input
-          {...register("password")}
-          type="password"
-          autoComplete="current-password"
-          placeholder="Enter your password"
-          className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm
-          text-gray-900 placeholder:text-rose-500
-          outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
-        />
-        {errors.password && (
-          <p className="text-xs text-red-600">{errors.password.message}</p>
-        )}
-      </div>
-
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={isSubmitting || pending}
-        className="h-11 w-full rounded-lg bg-rose-600 text-white font-semibold
-        hover:bg-rose-700 transition disabled:opacity-60"
-      >
-        {isSubmitting || pending ? "Signing in..." : "Sign In"}
-      </button>
-
-      {/* Register Link */}
-      <p className="text-center text-sm text-gray-600">
-        New here?{" "}
-        <Link
-          href="/register"
-          className="font-semibold text-rose-600 hover:underline"
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full h-48px rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold transition flex items-center justify-center"
         >
-          Create a profile
+          {isSubmitting ? (
+            <Loader2 className="animate-spin" size={18} />
+          ) : (
+            "Log In"
+          )}
+        </button>
+      </form>
+      
+       {/* Error Message */}
+      {errorMsg && (
+        <div className="flex items-center gap-2 text-xs bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-lg mb-5">
+          <AlertCircle size={14} />
+          {errorMsg}
+        </div>
+      )}  
+
+      {/* Footer */}
+      <p className="text-center text-xs text-slate-500 mt-8">
+        Don’t have an account?{" "}
+        <Link href="/register" className="text-rose-600 font-semibold">
+          Create one
         </Link>
       </p>
-    </form>
+
+
+    </div>
+    
   );
 }

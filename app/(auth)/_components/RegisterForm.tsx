@@ -2,252 +2,235 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
-import { registerSchema, RegisterData } from "../schema";
-import { useTransition } from "react";
+import { registerSchema, SignupData } from "../schema";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import axiosInstance from "../../../lib/api/axios";
-import { API } from "@/lib/api/endpoints";
-import z from "zod";
+import { useState } from "react";
+import Link from "next/link";
+import {
+  User,
+  Mail,
+  Lock,
+  Phone,
+  Calendar,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Loader2,
+} from "lucide-react";
+import { handleRegister } from "@/lib/actions/auth-action";
 
 const CULTURES = ["Brahmin", "Chhetri", "Newar", "Rai", "Magar", "Gurung"];
-const GENDERS = ["Male", "Female", "Other"];
-const INTERESTED_IN = ["Male", "Female", "Everyone"];
 
 export default function RegisterForm() {
   const router = useRouter();
-
+  const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const {
-  register,
-  handleSubmit,
-  formState: { errors, isSubmitting },
-  setError,
-} = useForm<z.input<typeof registerSchema>>({
-  resolver: zodResolver(registerSchema),
-  mode: "onBlur",
-});
-
-  const [pending, startTransition] = useTransition();
-
-  const submit = async (values: z.input<typeof registerSchema>) => {
-  startTransition(async () => {
-    try {
-      // Zod already removes confirmPassword via .transform()
-      const parsed = registerSchema.parse(values);
-
-      const payload = Object.fromEntries(
-        Object.entries(parsed).filter(
-          ([, v]) => v !== "" && v !== null && v !== undefined,
-        ),
-      );
-
-      const res = await axiosInstance.post(API.AUTH.REGISTER, payload);
-
-      if (res.data?.success || res.data?.user) {
-        router.push("/login");
-      } else {
-        setError("root", {
-          message: res.data?.message || "Registration failed",
-        });
-      }
-    } catch (err: any) {
-      setError("root", {
-        message:
-          err?.response?.data?.message ||
-          "Unable to register. Please try again.",
-      });
-    }
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<SignupData>({
+    resolver: zodResolver(registerSchema),
   });
-};
 
+  const passwordValue = watch("password");
+
+  const onSubmit = async (data: SignupData) => {
+    const result = await handleRegister(data);
+    if (result?.success) router.push("/login");
+  };
+  console.log(errors);
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-5">
-      {/* Logo */}
-      <div className="flex justify-center -mb-2 -mt-2">
-        <Image
-          src="/images/logoright.png"
-          alt="MannMilap Logo"
-          width={120}
-          height={120}
-          className="block"
-          priority
+    <div className="w-full text-slate-900">
+      {/* ---------- TITLE ---------- */}
+      <h2 className="text-2xl font-bold text-center mb-6">
+        Create your account
+      </h2>
+
+      {/* ---------- FORM ---------- */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+        <InputField
+          placeholder="Full Name"
+          icon={<User size={16} />}
+          error={errors.fullName?.message}
+          {...register("fullName")}
         />
-      </div>
 
-      {/* Title */}
-      <div className="text-center leading-tight">
-        <h1 className="text-lg font-bold text-gray-900">Create your account</h1>
-        <p className="text-xs text-gray-600">
-          Find meaningful connections based on culture
-        </p>
-      </div>
+        <InputField
+          placeholder="Email"
+          icon={<Mail size={16} />}
+          error={errors.email?.message}
+          {...register("email")}
+        />
 
-      {/* Global Error */}
-      {errors.root && (
-        <p className="text-center text-sm text-red-600">
-          {errors.root.message}
-        </p>
-      )}
+        {/* Password */}
 
-      {/* Account Details */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-900">Account Details</h2>
-
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-gray-900">Username</label>
-          <input
-            {...register("username")}
-            className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-gray-900 placeholder:text-rose-300 focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
-          />
-          {errors.username && (
-            <p className="text-xs text-red-500">{errors.username.message}</p>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-gray-900">Email</label>
-          <input
-            {...register("email")}
-            className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-gray-900 placeholder:text-rose-300 focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
-          />
-          {errors.email && (
-            <p className="text-xs text-red-500">{errors.email.message}</p>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-gray-900">Password</label>
-          <input
-            type="password"
-            {...register("password")}
-            className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-gray-900 placeholder:text-rose-300 focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
-          />
+        <div className="relative pt-1">
+          <div
+            className={`bg-white rounded-xl flex items-center px-4 h-48px border-2 transition-all ${
+              errors.password
+                ? "border-red-500"
+                : "border-transparent focus-within:border-indigo-500"
+            }`}
+          >
+            <input
+              {...register("password")}
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              className="w-full bg-transparent text-slate-900 text-xs focus:outline-none font-semibold"
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => setPasswordFocused(false)}
+            />
+            {(passwordValue || passwordFocused) && (
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="mr-2 text-slate-400 hover:text-indigo-600 focus:outline-none"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            )}
+            <Lock size={16} className="text-slate-400" />
+          </div>
           {errors.password && (
-            <p className="text-xs text-red-500">{errors.password.message}</p>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-gray-900">
-            Confirm password
-          </label>
-          <input
-            type="password"
-            {...register("confirmPassword")}
-            className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-gray-900 placeholder:text-rose-300 focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none"
-          />
-          {errors.confirmPassword && (
-            <p className="text-xs text-red-500">
-              {errors.confirmPassword.message}
+            <p className="text-[10px] text-red-500 font-bold absolute -bottom-4 left-2 uppercase italic">
+              {errors.password.message}
             </p>
           )}
         </div>
-      </div>
 
-      {/* Personal Info */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-900">
-          Personal Information
-        </h2>
-
-        <input
-          {...register("fullName")}
-          placeholder="Full name"
-          className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm"
-        />
-        <input
-          {...register("phone")}
+        <InputField
           placeholder="Phone (optional)"
-          className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm"
+          icon={<Phone size={16} />}
+          error={errors.phone?.message}
+          {...register("phone")}
         />
 
-        <div className="grid grid-cols-2 gap-3">
-          <select
-            {...register("gender")}
-            className="h-10 w-full rounded-lg border px-3 text-sm"
-          >
-            <option value="">Gender</option>
-            {GENDERS.map((g) => (
-              <option key={g}>{g}</option>
-            ))}
-          </select>
+        <SelectField error={errors.gender?.message} {...register("gender")}>
+          <option value="">Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </SelectField>
 
-          <input
-            type="date"
-            {...register("dateOfBirth")}
-            className="h-10 w-full rounded-lg border px-3 text-sm"
-          />
-        </div>
+        <InputField
+          type="date"
+          icon={<Calendar size={16} />}
+          error={errors.dateOfBirth?.message}
+          {...register("dateOfBirth")}
+        />
 
-        <select
-          {...register("culture")}
-          className="h-10 w-full rounded-lg border px-3 text-sm"
-        >
-          <option value="">Culture</option>
+        <SelectField error={errors.culture?.message} {...register("culture")}>
+          <option value="">Your Culture</option>
           {CULTURES.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Preferences */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-900">Preferences</h2>
-
-        <select
-          {...register("interestedIn")}
-          className="h-10 w-full rounded-lg border px-3 text-sm"
-        >
-          <option value="">Interested in</option>
-          {INTERESTED_IN.map((i) => (
-            <option key={i}>{i}</option>
-          ))}
-        </select>
-
-        <div className="grid grid-cols-2 gap-2">
-          {CULTURES.map((c) => (
-            <label key={c} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                value={c}
-                {...register("preferredCulture")}
-              />
+            <option key={c} value={c}>
               {c}
-            </label>
+            </option>
           ))}
+        </SelectField>
+
+        <SelectField
+          error={errors.interestedIn?.message}
+          {...register("interestedIn")}
+        >
+          <option value="">Interested In</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Everyone">Everyone</option>
+        </SelectField>
+
+        {/* ---------- PREFERRED CULTURE ---------- */}
+        <div className="pt-2 space-y-2">
+          <p className="text-xs font-semibold text-slate-700">
+            Preferred Culture(s)
+          </p>
+
+          <div className="grid grid-cols-2 gap-2">
+            {CULTURES.map((c) => (
+              <label key={c} className="flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  value={c}
+                  {...register("preferredCulture")}
+                />
+                {c}
+              </label>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <input
+        {/* ---------- AGE RANGE ---------- */}
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <InputField
             type="number"
+            placeholder="Min Age"
             {...register("minPreferredAge", { valueAsNumber: true })}
-            placeholder="Min age"
-            className="h-10 w-full rounded-lg border px-3 text-sm"
           />
-          <input
+          <InputField
             type="number"
+            placeholder="Max Age"
             {...register("maxPreferredAge", { valueAsNumber: true })}
-            placeholder="Max age"
-            className="h-10 w-full rounded-lg border px-3 text-sm"
           />
         </div>
-      </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting || pending}
-        className="w-full h-10 rounded-lg bg-rose-500 text-white font-semibold"
-      >
-        {isSubmitting || pending ? "Creating account..." : "Create account"}
-      </button>
+        {/* ---------- LOGIN LINK ---------- */}
+        <p className="text-xs text-slate-600 text-center pt-2">
+          Already have an account?{" "}
+          <Link href="/login" className="text-[#C8344A] font-semibold">
+            Login
+          </Link>
+        </p>
 
-      <p className="text-center text-sm text-gray-600">
-        Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-rose-600">
-          Log in
-        </Link>
-      </p>
-    </form>
+        {/* ---------- SUBMIT ---------- */}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full py-4 rounded-xl bg-[#C8344A] text-white font-bold hover:bg-[#B52E42] transition"
+        >
+          {isSubmitting ? (
+            <Loader2 className="animate-spin mx-auto" size={18} />
+          ) : (
+            "Sign Up"
+          )}
+        </button>
+      </form>
+    </div>
   );
+}
+
+/* ---------- COMPONENTS ---------- */
+
+function InputField({ icon, error, ...props }: any) {
+  return (
+    <div className="relative">
+      <div className="input text-slate-900">
+        <input {...props} className="text-slate-900 placeholder-slate-400" />
+        {icon}
+      </div>
+      {error && <ErrorText msg={error} />}
+    </div>
+  );
+}
+
+function SelectField({ children, error, ...props }: any) {
+  return (
+    <div className="relative">
+      <div className="input text-slate-900">
+        <select {...props} className="text-slate-900">
+          {children}
+        </select>
+        <ChevronDown size={16} />
+      </div>
+      {error && <ErrorText msg={error} />}
+    </div>
+  );
+}
+
+function ErrorText({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p className="text-[11px] text-red-500 mt-1 ml-2 italic">{msg}</p>;
 }
