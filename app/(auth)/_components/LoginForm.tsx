@@ -14,7 +14,7 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { handleLogin } from "@/lib/actions/auth-action";
 
 export default function LoginForm() {
@@ -31,31 +31,45 @@ export default function LoginForm() {
     resolver: zodResolver(loginSchema),
   });
 
+  const [pending, setTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
   const passwordValue = watch("password");
 
   const onSubmit = async (data: LoginData) => {
     setErrorMsg("");
-    const result = await handleLogin(data);
-
-    if (result?.success) {
-      router.push("/home");
-    } else {
-      setErrorMsg(result?.message || "Invalid email or password");
-    }
+    setTransition(async () => {
+      try {
+        const result = await handleLogin(data);
+        if (!result.success) {
+          throw new Error(result.message);
+        }
+        if (result?.success) {
+          if (result.data?.role == "admin") {
+            return router.replace("/admin");
+          }
+          if (result.data?.role === "user") {
+            return router.replace("/user/dashboard");
+          }
+          return router.replace("/");
+        } else {
+          setError(result?.message || "Invalid email or password");
+        }
+      } catch (err: Error | any) {
+        setError(err.message || "Login Failed");
+      }
+    });
   };
-  
+
   return (
     <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl px-8 py-10 text-slate-900">
-
-     
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        
         {/* Email */}
         <div>
           <label className="text-xs font-semibold text-slate-600">
             Email Address
           </label>
-          <div className="mt-1 flex items-center gap-2 bg-slate-100 px-4 h-[46px] rounded-xl focus-within:ring-2 focus-within:ring-rose-400">
+          <div className="mt-1 flex items-center gap-2 bg-slate-100 px-4 h-46px rounded-xl focus-within:ring-2 focus-within:ring-rose-400">
             <Mail size={16} className="text-slate-400" />
             <input
               {...register("email")}
@@ -75,7 +89,7 @@ export default function LoginForm() {
           <label className="text-xs font-semibold text-slate-600">
             Password
           </label>
-          <div className="mt-1 flex items-center gap-2 bg-slate-100 px-4 h-[46px] rounded-xl focus-within:ring-2 focus-within:ring-rose-400">
+          <div className="mt-1 flex items-center gap-2 bg-slate-100 px-4 h-46px rounded-xl focus-within:ring-2 focus-within:ring-rose-400">
             <Lock size={16} className="text-slate-400" />
             <input
               {...register("password")}
@@ -123,14 +137,14 @@ export default function LoginForm() {
           )}
         </button>
       </form>
-      
-       {/* Error Message */}
+
+      {/* Error Message */}
       {errorMsg && (
         <div className="flex items-center gap-2 text-xs bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-lg mb-5">
           <AlertCircle size={14} />
           {errorMsg}
         </div>
-      )}  
+      )}
 
       {/* Footer */}
       <p className="text-center text-xs text-slate-500 mt-8">
@@ -139,9 +153,6 @@ export default function LoginForm() {
           Create one
         </Link>
       </p>
-
-
     </div>
-    
   );
 }
