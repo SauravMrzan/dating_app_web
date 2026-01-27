@@ -1,9 +1,11 @@
 "use server";
 
-import { register, login } from "../api/auth";
-import { SignupData } from "../../app/(auth)/schema";
+import { register, login, whoAmi, updateProfile } from "../api/auth";
+import { SignupData, LoginData } from "../../app/(auth)/schema";
 import { setAuthToken, setUserData, clearAuthCookies } from "../cookie";
 import { redirect } from "next/navigation";
+import { success } from "zod";
+import { revalidatePath } from "next/dist/server/web/spec-extension/revalidate";
 
 /**
  * Handles the Registration Logic
@@ -11,28 +13,18 @@ import { redirect } from "next/navigation";
 export const handleRegister = async (data: SignupData) => {
   try {
     const result = await register(data);
-
-    /**
-     * Backend signup returns:
-     * { message: string, user?: object }
-     * Normalize response for UI
-     */
-    const createdUser = result?.user ?? result?.data ?? null;
-    const isCreated = Boolean(createdUser) || Boolean(result?.id);
-
-    if (isCreated) {
+    if (result.success) {
       return {
         success: true,
-        message: result?.message || "Registration successful",
-        data: createdUser ?? result,
+        message: "Registration successful",
+        data: result.data,
       };
     }
-
     return {
       success: false,
-      message: result?.message || "Registration failed",
+      message: result.message || "Registration failed",
     };
-  } catch (error: any) {
+  } catch (error: Error | any) {
     console.error("Registration Server Error:", error);
     return {
       success: false,
@@ -44,10 +36,7 @@ export const handleRegister = async (data: SignupData) => {
 /**
  * Handles the Login Logic
  */
-export const handleLogin = async (data: {
-  email: string;
-  password: string;
-}) => {
+export const handleLogin = async (data: LoginData) => {
   try {
     const result = await login(data);
 
@@ -55,7 +44,7 @@ export const handleLogin = async (data: {
      * Backend login returns:
      * { token, user }
      */
-    if (result && result.token) {
+    if (result.success) {
       // Save JWT token
       await setAuthToken(result.token);
 
@@ -92,5 +81,42 @@ export const handleLogout = async () => {
     console.error("Logout Error:", error);
   }
 
-  redirect("/login");
+  return redirect("/login");
 };
+
+export async function handleWhoAmI() {
+  try {
+    const result = await whoAmi();
+    if (result.success) {
+      return {
+        success: true,
+        message: "User data fetch successfully",
+        data: result.data,
+      };
+    }
+    return {
+      success: false,
+      message: result.message || "Failed to fetch user data",
+    };
+  } catch (error: Error | any) {
+    return { success: false, message: error.message };
+  }
+}
+
+export async function handleUpdateProfile(profileData: FormData) {
+    try {
+        const result = await updateProfile(profileData);
+        if (result.success) {
+            await setUserData(result.data); // update cookie 
+            revalidatePath('/user/profile'); // revalidate profile page/ refresh new data
+            return {
+                success: true,
+                message: 'Profile updated successfully',
+                data: result.data
+            };
+        }
+        return { success: false, message: result.message || 'Failed to update profile' };
+    } catch (error: Error | any) {
+        return { success: false, message: error.message };
+    }
+}

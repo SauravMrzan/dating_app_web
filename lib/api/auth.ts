@@ -1,7 +1,8 @@
+import { SignupData, LoginData } from "../../app/(auth)/schema";
 import axios from "./axios";
 import { API } from "./endpoints";
 
-export const register = async (registerData: any) => {
+export const register = async (registerData: SignupData) => {
   try {
     const response = await axios.post(
       API.AUTH.REGISTER, // path
@@ -17,7 +18,7 @@ export const register = async (registerData: any) => {
   }
 };
 
-export const login = async (loginData: any) => {
+export const login = async (loginData: LoginData) => {
   try {
     const response = await axios.post(
       API.AUTH.LOGIN, // path
@@ -32,3 +33,30 @@ export const login = async (loginData: any) => {
     );
   }
 };
+export const whoAmi = async () => {
+  try {
+    const response = await axios.get(API.AUTH.WHOAMI);
+    return response.data;
+  } catch (error: Error | any) {
+    throw new Error(error.response?.data?.message
+      || error.message || 'Whoami failed');
+  }
+}
+
+export const updateProfile = async (profileData: any) => {
+  try {
+    const response = await axios.put(
+      API.AUTH.UPDATEPROFILE,
+      profileData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data', // for file upload/multer
+        }
+      }
+    );
+    return response.data;
+  } catch (error: Error | any) {
+    throw new Error(error.response?.data?.message
+      || error.message || 'Update profile failed');
+  }
+}
