@@ -16,11 +16,15 @@ import {
 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { handleLogin } from "@/lib/actions/auth-action";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginForm() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
+  const {checkAuth} = useAuth();
 
   const {
     register,
@@ -38,12 +42,15 @@ export default function LoginForm() {
 
   const onSubmit = async (data: LoginData) => {
     setErrorMsg("");
+    setMessage("");
+    setIsSuccess(false);
     setTransition(async () => {
       try {
         const result = await handleLogin(data);
         if (!result.success) {
           throw new Error(result.message);
         }
+        await checkAuth();
         if (result?.success) {
           if (result.data?.role == "admin") {
             return router.replace("/admin");
@@ -52,6 +59,7 @@ export default function LoginForm() {
             return router.replace("/user/dashboard");
           }
           return router.replace("/");
+          
         } else {
           setError(result?.message || "Invalid email or password");
         }
@@ -60,7 +68,7 @@ export default function LoginForm() {
       }
     });
   };
-
+  
   return (
     <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl px-8 py-10 text-slate-900">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
