@@ -1,141 +1,147 @@
 "use client";
-import React, { useEffect, useState, use } from "react";
-import { motion } from "framer-motion";
+
+import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { 
-  ShieldCheck, MapPin, Calendar, Mail, 
-  Phone, Heart, ArrowLeft, BadgeCheck 
+  ArrowLeft, Shield, Calendar, Mail, 
+  MapPin, Hash, User as UserIcon, 
+  ExternalLink, Edit, Trash2, 
+  BadgeCheck, Clock
 } from "lucide-react";
+import axiosInstance from "@/lib/api/axios";
+import { API } from "@/lib/api/endpoints";
 import Link from "next/link";
 
-export default function ViewUser({ params }: { params: Promise<{ id: string }> }) {
-    const unwrappedParams = use(params);
-    const id = unwrappedParams.id;
+export default function UserDetailPage() {
+  const { id } = useParams();
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-    const [user, setUser] = useState<any>(null);
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        // Correctly interpolation for the specific user ID
+        const res = await axiosInstance.get(`${API.ADMIN.USERS}/${id}`);
+        setUser(res.data.user || res.data);
+      } catch (err) {
+        console.error("Detail Fetch Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (id) fetchUser();
+  }, [id]);
 
-    useEffect(() => {
-        // Using your environment variable and the token from local storage
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${id}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) setUser(data.user);
-        })
-        .catch(err => console.error("Fetch error:", err));
-    }, [id]);
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D32F2F]"></div>
+    </div>
+  );
 
-    if (!user) return (
-        <div className="min-h-[60vh] flex items-center justify-center">
-            <div className="animate-pulse text-rose-500 font-bold uppercase tracking-[0.3em]">
-                Retrieving Profile...
-            </div>
+  return (
+    <div className="space-y-6">
+      {/* Top Navigation Bar */}
+      <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+        <button 
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-[#D32F2F] transition-colors"
+        >
+          <ArrowLeft size={16} /> Back to Directory
+        </button>
+        <div className="flex gap-2">
+          <Link 
+            href={`/admin/users/${id}/edit`}
+            className="p-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all border border-gray-100"
+          >
+            <Edit size={18} />
+          </Link>
+          <button className="p-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-red-50 hover:text-red-600 transition-all border border-gray-100">
+            <Trash2 size={18} />
+          </button>
         </div>
-    );
+      </div>
 
-    return (
-        <div className="max-w-5xl mx-auto space-y-6">
-            {/* Navigation Header */}
-            <div className="flex items-center justify-between mb-8">
-                <Link href="/admin/users" className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors group">
-                    <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                    <span className="text-xs font-bold uppercase tracking-widest">Back to Registry</span>
-                </Link>
-                <div className="flex gap-3">
-                    <button className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold hover:bg-white/10 transition-all">
-                        EDIT ACCOUNT
-                    </button>
-                    <button className="px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-bold hover:bg-rose-500 hover:text-white transition-all">
-                        SUSPEND
-                    </button>
-                </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* LEFT COLUMN: Identity Card */}
+        <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden h-fit">
+          <div className="h-24 bg-[#D32F2F]/5" />
+          <div className="px-8 pb-8 -mt-12 text-center">
+            <div className="relative inline-block">
+              <div className="w-32 h-32 rounded-[2rem] border-4 border-white bg-gray-100 overflow-hidden shadow-lg mx-auto">
+                {user?.profilePicture ? (
+                  <img src={user.profilePicture} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                    <UserIcon size={40} className="text-gray-300" />
+                  </div>
+                )}
+              </div>
+              <div className="absolute bottom-1 right-1 bg-green-500 border-2 border-white w-5 h-5 rounded-full" />
             </div>
+            
+            <h2 className="mt-4 text-2xl font-black text-gray-900 tracking-tight">{user?.fullName}</h2>
+            <p className="text-xs font-bold text-[#D32F2F] uppercase tracking-[0.2em] mb-4">
+              System ID: {id?.toString().slice(-6).toUpperCase()}
+            </p>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Profile Visual Card */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="lg:col-span-1 space-y-6"
-                >
-                    <div className="relative group">
-                        <div className="aspect-[3/4] rounded-[32px] overflow-hidden bg-[#111] border border-white/5">
-                            {user.profilePicture ? (
-                                <img 
-                                    src={`${process.env.NEXT_PUBLIC_API_URL}${user.profilePicture}`} 
-                                    alt={user.fullName}
-                                    className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-800 uppercase font-black text-6xl">
-                                    {user.fullName.charAt(0)}
-                                </div>
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-                        </div>
-                        <div className="absolute bottom-6 left-6">
-                            <h2 className="text-2xl font-black text-white">{user.fullName}</h2>
-                            <p className="text-rose-400 font-bold text-xs flex items-center gap-1 uppercase tracking-tighter">
-                                <BadgeCheck size={14} /> Official Member
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="bg-[#0A0A0A] border border-white/5 p-6 rounded-[24px]">
-                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-4">Meta Information</p>
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs text-gray-400">Status</span>
-                                <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-[10px] font-bold border border-green-500/20">ACTIVE</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs text-gray-400">Member Since</span>
-                                <span className="text-xs text-white font-mono">{new Date(user.createdAt).toLocaleDateString()}</span>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* Details Section */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="lg:col-span-2 space-y-6"
-                >
-                    <div className="bg-[#0A0A0A] border border-white/5 p-10 rounded-[40px] relative overflow-hidden">
-                        <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-rose-500/5 rounded-full blur-[100px]" />
-                        
-                        <h3 className="text-xs font-bold text-rose-500 uppercase tracking-[0.2em] mb-8">Personal Records</h3>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-                            <InfoBlock icon={Mail} label="Email Address" value={user.email} />
-                            <InfoBlock icon={Phone} label="Contact Number" value={user.phone} />
-                            <InfoBlock icon={Calendar} label="Date of Birth" value={new Date(user.dob).toDateString()} />
-                            <InfoBlock icon={Heart} label="Gender Preference" value={user.gender} />
-                        </div>
-
-                        <div className="mt-12 pt-10 border-t border-white/5">
-                            <p className="text-[10px] text-gray-600 font-mono mb-2 uppercase">Internal System UID</p>
-                            <code className="text-xs text-gray-400 bg-white/5 px-3 py-1 rounded-md">{id}</code>
-                        </div>
-                    </div>
-                </motion.div>
+            <div className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-50 rounded-xl border border-gray-100">
+              <Shield size={14} className="text-gray-400" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-600">
+                {user?.role || 'User'} Level Access
+              </span>
             </div>
+          </div>
         </div>
-    );
+
+        {/* RIGHT COLUMN: Technical Details */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6 flex items-center gap-2">
+               <Hash size={16} className="text-[#D32F2F]" /> Account Metadata
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <DetailItem label="Full Legal Name" value={user?.fullName} icon={<UserIcon size={16}/>} />
+              <DetailItem label="Verified Email" value={user?.email} icon={<Mail size={16}/>} />
+              <DetailItem label="Date of Birth" value={user?.dob || 'Not Provided'} icon={<Calendar size={16}/>} />
+              <DetailItem label="Database ID" value={id as string} icon={<Hash size={16}/>} isCode />
+              <DetailItem label="Registration Date" value={new Date(user?.createdAt).toLocaleDateString()} icon={<Clock size={16}/>} />
+              <DetailItem label="Account Status" value="Active / Verified" icon={<BadgeCheck size={16}/>} />
+            </div>
+          </div>
+
+          {/* Activity Placeholder - Fulfills "Dummy Page" requirement */}
+          <div className="bg-gray-900 rounded-[2.5rem] p-8 text-white">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white/40 mb-4">Safety & Logs</h3>
+            <p className="text-sm text-white/60 leading-relaxed">
+              This account is currently in good standing. No flags or reports have been filed against this user in the MannMilap system.
+            </p>
+            <div className="mt-6 flex gap-4">
+              <button className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                Download Logs
+              </button>
+              <button className="px-6 py-2 bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                Restrict User
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function InfoBlock({ icon: Icon, label, value }: any) {
-    return (
-        <div className="flex items-start gap-4">
-            <div className="p-3 bg-white/5 rounded-2xl">
-                <Icon size={20} className="text-rose-400" />
-            </div>
-            <div>
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">{label}</p>
-                <p className="text-lg font-medium text-white">{value}</p>
-            </div>
-        </div>
-    );
+function DetailItem({ label, value, icon, isCode = false }: { label: string, value: string, icon: React.ReactNode, isCode?: boolean }) {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+        {icon} {label}
+      </p>
+      <p className={`text-sm font-bold text-gray-800 ${isCode ? 'font-mono text-xs bg-gray-50 px-2 py-1 rounded' : ''}`}>
+        {value}
+      </p>
+    </div>
+  );
 }

@@ -3,7 +3,14 @@ import { cookies } from "next/headers";
 
 export const setAuthToken = async (token: string) => {
   const cookieStore = await cookies();
-  cookieStore.set({ name: "auth_token", value: token });
+  cookieStore.set({
+    name: "auth_token",
+    value: token,
+    path: "/", // Must be accessible everywhere
+    httpOnly: true, // Prevents JS access for security
+    sameSite: "lax", // Vital for navigation persistence
+    secure: process.env.NODE_ENV === "production",
+  });
 };
 
 export const getAuthToken = async () => {
@@ -19,6 +26,10 @@ export const setUserData = async (userData: any) => {
   cookieStore.set({
     name: "user_data",
     value: JSON.stringify(userData),
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
   });
 };
 

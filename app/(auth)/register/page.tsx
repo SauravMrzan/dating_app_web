@@ -1,5 +1,5 @@
 "use client";
-import SignupForm from "../_components/RegisterForm";
+import RegisterForm from "../_components/RegisterForm";
 import Image from "next/image";
 
 export default function SignupPage() {
@@ -22,7 +22,7 @@ export default function SignupPage() {
           </p>
         </div>
 
-        <SignupForm />
+        <RegisterForm/>
 
       </div>
     </div>
