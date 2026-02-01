@@ -2,14 +2,18 @@
 
 export const API = {
   AUTH: {
-    LOGIN: "/api/auth/login",
-    REGISTER: "/api/auth/register",
-    WHOAMI: '/api/auth/whoami',
-    UPDATEPROFILE: '/api/auth/update-profile',
+    LOGIN: "/auth/login",
+    REGISTER: "/auth/register",
+    WHOAMI: '/auth/whoami',
+    UPDATEPROFILE: '/auth/update-profile',
   },
-  ADMIN:{
-        USER:{
-            CREATE: '/api/admin/users/',
-        }
+  ADMIN: {
+    STATS: "/admin/dashboard-stats", 
+    USERS: "/admin/users",
+    USER: {
+      CREATE: '/admin/users',
+      DELETE: (id: string) => `/admin/users/${id}`,
+      UPDATE: (id: string) => `/admin/users/${id}`,
     }
+  }
 };
