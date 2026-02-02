@@ -29,12 +29,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased `}
       >
-        8 hours ago admin and proxy
+        
         <AuthProvider>
           {children}
           <ToastContainer position="top-right" autoClose={3000} />
         </AuthProvider>
-        last month init sprint 1
+       
       </body>
     </html>
   );

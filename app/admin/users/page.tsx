@@ -3,30 +3,58 @@
 import React, { useEffect, useState } from "react";
 import { 
   Edit2, Trash2, Eye, UserPlus, 
-  Search, MoreVertical, Shield, 
-  CheckCircle, Clock, Filter 
+  Search, Shield, CheckCircle, Filter, Loader2 
 } from "lucide-react";
 import Link from "next/link";
 import axiosInstance from "@/lib/api/axios";
 import { API } from "@/lib/api/endpoints";
+import { toast } from "react-hot-toast";
 
 export default function AdminUserTable() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // 1. Fetch Users
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const res = await axiosInstance.get(API.ADMIN.USERS);
+      setUsers(res.data.users || []);
+    } catch (err) {
+      console.error("Fetch Error:", err);
+      toast.error("Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await axiosInstance.get(API.ADMIN.USERS);
-        setUsers(res.data.users || []);
-      } catch (err) {
-        console.error("Fetch Error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchUsers();
   }, []);
+
+  // 2. Delete User Logic
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to remove ${name}?`)) return;
+
+    try {
+      const res = await axiosInstance.delete(`${API.ADMIN.USERS}/${id}`);
+      if (res.data.success) {
+        toast.success("User deleted successfully");
+        // Update local state instead of re-fetching to make it feel faster
+        setUsers(users.filter((user) => user._id !== id));
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Delete failed");
+    }
+  };
+
+  // 3. Search Logic
+  const filteredUsers = users.filter((user) =>
+    user.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user._id?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -50,6 +78,8 @@ export default function AdminUserTable() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input 
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, email or ID..."
             className="w-full bg-white border border-gray-200 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-2 focus:ring-[#D32F2F]/10 focus:border-[#D32F2F] outline-none transition-all"
           />
@@ -59,7 +89,7 @@ export default function AdminUserTable() {
         </button>
       </div>
 
-      {/* THE TABLE - Styled uniquely to avoid similarity */}
+      {/* TABLE */}
       <div className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -75,26 +105,39 @@ export default function AdminUserTable() {
               {loading ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan={4} className="px-6 py-6 bg-gray-50/20" />
+                    <td colSpan={4} className="px-6 py-8">
+                      <div className="h-4 bg-gray-100 rounded w-3/4 mx-auto" />
+                    </td>
                   </tr>
                 ))
+              ) : filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center text-gray-400 text-sm">
+                    No users found matching your search.
+                  </td>
+                </tr>
               ) : (
-                users.map((user) => (
+                filteredUsers.map((user) => (
                   <tr key={user._id} className="hover:bg-gray-50/50 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-gray-100 overflow-hidden border border-gray-200">
+                        <div className="w-10 h-10 rounded-xl bg-gray-100 overflow-hidden border border-gray-200 flex-shrink-0">
                           {user.profilePicture ? (
-                            <img src={user.profilePicture} alt="" className="w-full h-full object-cover" />
+                            <img 
+                                src={`${process.env.NEXT_PUBLIC_API_URL}${user.profilePicture}`} 
+                                alt="" 
+                                className="w-full h-full object-cover" 
+                                onError={(e) => { (e.target as any).src = "https://via.placeholder.com/40"; }}
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-300">
                               <Shield size={20} />
                             </div>
                           )}
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-gray-900">{user.fullName}</p>
-                          <p className="text-[11px] text-gray-500">{user.email}</p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-gray-900 truncate">{user.fullName}</p>
+                          <p className="text-[11px] text-gray-500 truncate">{user.email}</p>
                         </div>
                       </div>
                     </td>
@@ -123,7 +166,10 @@ export default function AdminUserTable() {
                         >
                           <Edit2 size={18} />
                         </Link>
-                        <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                        <button 
+                          onClick={() => handleDelete(user._id, user.fullName)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        >
                           <Trash2 size={18} />
                         </button>
                       </div>
@@ -135,9 +181,10 @@ export default function AdminUserTable() {
           </table>
         </div>
         
-        {/* Pagination Dummy */}
         <div className="px-6 py-4 border-t border-gray-50 flex items-center justify-between">
-          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Showing {users.length} results</p>
+          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+            {filteredUsers.length} Members in directory
+          </p>
           <div className="flex gap-2">
             <button className="px-4 py-2 text-[10px] font-black border border-gray-200 rounded-lg uppercase disabled:opacity-50" disabled>Prev</button>
             <button className="px-4 py-2 text-[10px] font-black border border-gray-200 rounded-lg uppercase">Next</button>

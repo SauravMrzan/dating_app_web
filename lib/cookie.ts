@@ -3,14 +3,7 @@ import { cookies } from "next/headers";
 
 export const setAuthToken = async (token: string) => {
   const cookieStore = await cookies();
-  cookieStore.set({
-    name: "auth_token",
-    value: token,
-    path: "/", // Must be accessible everywhere
-    httpOnly: true, // Prevents JS access for security
-    sameSite: "lax", // Vital for navigation persistence
-    secure: process.env.NODE_ENV === "production",
-  });
+  cookieStore.set({ name: "auth_token", value: token });
 };
 
 export const getAuthToken = async () => {
@@ -21,24 +14,28 @@ export const getAuthToken = async () => {
 
 export const setUserData = async (userData: any) => {
   const cookieStore = await cookies();
-  // cookie can only store string values
-  // convert object to string -> JSON.stringify
+  // Ensure we are saving a clean, encoded string
+  const dataString = JSON.stringify(userData);
   cookieStore.set({
     name: "user_data",
-    value: JSON.stringify(userData),
-    path: "/",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    value: encodeURIComponent(dataString),
+    path: "/", // Ensure it's available across the whole site
   });
 };
 
 export const getUserData = async () => {
   const cookieStore = await cookies();
   const userDataStr = cookieStore.get("user_data")?.value;
-  // convert string back to object -> JSON.parse
-  if (userDataStr) {
-    return JSON.parse(userDataStr);
+
+  // Check if it exists AND isn't literally the string "undefined"
+  if (userDataStr && userDataStr !== "undefined") {
+    try {
+      const decodedData = decodeURIComponent(userDataStr);
+      return JSON.parse(decodedData);
+    } catch (error) {
+      console.error("❌ Cookie Parse Error:", error);
+      return null;
+    }
   }
   return null;
 };
