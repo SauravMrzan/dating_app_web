@@ -1,227 +1,301 @@
 "use client";
-import { Controller, useForm } from "react-hook-form";
-import { UserData, UserSchema } from "@/app/admin/users/schema";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRef, useState, useTransition } from "react";
-import Link from "next/link";
-import { toast } from "react-toastify";
-import { handleCreateUser } from "@/lib/actions/admin/user-action";
-export default function CreateUserForm() {
 
-    const [pending, startTransition] = useTransition();
-    const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<UserData>({
-        resolver: zodResolver(UserSchema)
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  UserPlus,
+  Camera,
+  ArrowLeft,
+  CheckCircle2,
+  Loader2,
+  ChevronDown,
+} from "lucide-react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+
+const CULTURES = ["Brahmin", "Chhetri", "Newar", "Rai", "Magar", "Gurung"];
+
+export default function CreateUser() {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+
+  const [formData, setFormData] = useState({
+    fullName: "",
+    username: "",
+    email: "",
+    password: "",
+    phone: "",
+    gender: "",
+    dateOfBirth: "",
+    culture: "",
+    role: "user",
+    interestedIn: "Everyone",
+    minPreferredAge: 18,
+    maxPreferredAge: 99,
+    preferredCulture: [] as string[],
+  });
+
+  // Handle Standard Text/Select Inputs
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle Checkbox for Array values
+  const handleCheckboxChange = (culture: string) => {
+    setFormData((prev) => {
+      const current = prev.preferredCulture;
+      const updated = current.includes(culture)
+        ? current.filter((c) => c !== culture)
+        : [...current, culture];
+      return { ...prev, preferredCulture: updated };
     });
-    const [error, setError] = useState<string | null>(null);
-    const [previewImage, setPreviewImage] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+  };
 
-    const handleImageChange = (file: File | undefined, onChange: (file: File | undefined) => void) => {
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewImage(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-        } else {
-            setPreviewImage(null);
-        }
-        onChange(file);
-    };
+  // Handle File/Image Change
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      // Basic validation for students: check file size (e.g., 5MB)
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        toast.error("File is too large. Max 5MB.");
+        return;
+      }
+      setFile(selectedFile);
+      setPreview(URL.createObjectURL(selectedFile));
+      toast.success("Image selected!");
+    }
+  };
 
-    const handleDismissImage = (onChange?: (file: File | undefined) => void) => {
-        setPreviewImage(null);
-        onChange?.(undefined);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-    const onSubmit = async (data: UserData) => {
-        setError(null);
-        startTransition(async () => {
-            try {
-                const formData = new FormData();
-                if (data.firstName) {
-                    formData.append('firstName', data.firstName);
-                }
-                if (data.lastName) {
-                    formData.append('lastName', data.lastName);
-                }
+    const data = new FormData();
 
-                formData.append('email', data.email);
-                formData.append('username', data.username);
-                formData.append('password', data.password);
-                formData.append('confirmPassword', data.confirmPassword);
+    // Loop through state and append to FormData
+    Object.entries(formData).forEach(([key, value]) => {
+      if (key === "preferredCulture" && Array.isArray(value)) {
+        // Append each item individually so Multer/Zod treats it as an array
+        value.forEach((item) => data.append("preferredCulture", item));
+      } else {
+        data.append(key, String(value));
+      }
+    });
 
-                if (data.image) {
-                    formData.append('image', data.image);
-                }
-                const response = await handleCreateUser(formData);
+    // if (file) {
+    //   data.append("profilePicture", file);
+    // }
 
-                if (!response.success) {
-                    throw new Error(response.message || 'Create profile failed');
-                }
-                reset();
-                handleDismissImage();
-                toast.success('Profile Created successfully');
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/admin/users",
+        data,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
 
-            } catch (error: Error | any) {
-                toast.error(error.message || 'Create profile failed');
-                setError(error.message || 'Create profile failed');
-            }
-        });
+      if (response.data.success) {
+        toast.success("Identity Authorized Successfully!");
+        router.push("/admin/users");
+        router.refresh(); // Ensure the user list updates
+      }
+    } catch (err: any) {
+      console.error("Upload Error:", err);
+      const errorMessage =
+        err.response?.data?.message || "Auth Failed: Check server logs.";
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    };
-    console.log(errors);
-    return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Profile Image Display */}
-            <div className="mb-4">
-                {previewImage ? (
-                    <div className="relative w-24 h-24">
-                        <img
-                            src={previewImage}
-                            alt="Profile Image Preview"
-                            className="w-24 h-24 rounded-full object-cover"
-                        />
-                        <Controller
-                            name="image"
-                            control={control}
-                            render={({ field: { onChange } }) => (
-                                <button
-                                    type="button"
-                                    onClick={() => handleDismissImage(onChange)}
-                                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
-                                >
-                                    ✕
-                                </button>
-                            )}
-                        />
-                    </div>
+  return (
+    <div className="max-w-6xl mx-auto pb-20 px-4 text-slate-900">
+      {/* ... (Your existing Navigation Header) ... */}
+
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 lg:grid-cols-12 gap-8"
+      >
+        {/* Left: Profile & Access */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="bg-white p-6 rounded-3xl border-2 border-slate-100 shadow-xl flex flex-col items-center">
+            <div className="relative group w-full aspect-square max-w-[240px]">
+              <div className="w-full h-full rounded-[2.5rem] bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden flex items-center justify-center">
+                {preview ? (
+                  <img
+                    src={preview}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                    <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center">
-                        <span className="text-gray-600">No Image</span>
-                    </div>
+                  <Camera size={48} className="text-slate-300" />
                 )}
-
+              </div>
+              <input
+                type="file"
+                name="profilePicture"
+                onChange={handleFileChange}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+                accept="image/*"
+              />
             </div>
-            {/* Profile Image Input */}
-            <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Profile Image</label>
-                <Controller
-                    name="image"
-                    control={control}
-                    render={({ field: { onChange } }) => (
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            onChange={(e) => handleImageChange(e.target.files?.[0], onChange)}
-                            accept=".jpg,.jpeg,.png,.webp"
-                        />
-                    )}
-                />
-                {errors.image && <p className="text-sm text-red-600">{errors.image.message}</p>}
-            </div>
+            <p className="mt-4 text-[11px] font-black uppercase text-black">
+              Upload Biometrics
+            </p>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                    <label className="text-sm font-medium" htmlFor="firstName">First name</label>
-                    <input
-                        id="firstName"
-                        type="text"
-                        autoComplete="given-name"
-                        className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
-                        {...register("firstName")}
-                        placeholder="Jane"
-                    />
-                    {errors.firstName?.message && (
-                        <p className="text-xs text-red-600">{errors.firstName.message}</p>
-                    )}
-                </div>
+          <AdminSelect
+            label="Access Level"
+            name="role"
+            value={formData.role}
+            onChange={handleInputChange}
+          >
+            <option value="user">USER (Level 1)</option>
+            <option value="admin">ADMIN (Root)</option>
+          </AdminSelect>
+        </div>
 
-                <div className="space-y-1">
-                    <label className="text-sm font-medium" htmlFor="lastName">Last name</label>
-                    <input
-                        id="lastName"
-                        type="text"
-                        autoComplete="family-name"
-                        className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
-                        {...register("lastName")}
-                        placeholder="Doe"
-                    />
-                    {errors.lastName?.message && (
-                        <p className="text-xs text-red-600">{errors.lastName.message}</p>
-                    )}
-                </div>
+        {/* Right: Detailed Identity Information */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* Section 1: Credentials */}
+          <div className="bg-white p-8 rounded-3xl border-2 border-slate-100 shadow-xl space-y-6">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#D32F2F] border-b pb-2">
+              Step 1: Credentials
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <AdminInput
+                label="Full Name"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleInputChange}
+                required
+              />
+              <AdminInput
+                label="Username"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                required
+              />
+              <AdminInput
+                label="Email Address"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+              />
+              <AdminInput
+                label="Access Key"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+              />
             </div>
+          </div>
 
-            <div className="space-y-1">
-                <label className="text-sm font-medium" htmlFor="email">Email</label>
-                <input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
-                    {...register("email")}
-                    placeholder="you@example.com"
-                />
-                {errors.email?.message && (
-                    <p className="text-xs text-red-600">{errors.email.message}</p>
-                )}
+          {/* Section 2: Bio-Metrics */}
+          <div className="bg-white p-8 rounded-3xl border-2 border-slate-100 shadow-xl space-y-6">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#D32F2F] border-b pb-2">
+              Step 2: Bio-Metrics
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <AdminSelect
+                label="Gender"
+                name="gender"
+                value={formData.gender}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Select</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </AdminSelect>
+              <AdminInput
+                label="Date of Birth"
+                name="dateOfBirth"
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={handleInputChange}
+                required
+              />
+              <AdminSelect
+                label="Native Culture"
+                name="culture"
+                value={formData.culture}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Select</option>
+                {CULTURES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </AdminSelect>
             </div>
+          </div>
 
-            <div className="space-y-1">
-                <label className="text-sm font-medium" htmlFor="username">Username</label>
-                <input
-                    id="username"
-                    type="text"
-                    autoComplete="username"
-                    className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
-                    {...register("username")}
-                    placeholder="Jane Doe"
-                />
-                {errors.username?.message && (
-                    <p className="text-xs text-red-600">{errors.username.message}</p>
-                )}
-            </div>
-            <div className="space-y-1">
-                <label className="text-sm font-medium" htmlFor="password">Password</label>
-                <input
-                    id="password"
-                    type="password"
-                    autoComplete="new-password"
-                    className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
-                    {...register("password")}
-                    placeholder="••••••"
-                />
-                {errors.password?.message && (
-                    <p className="text-xs text-red-600">{errors.password.message}</p>
-                )}
-            </div>
+          {/* ... (Section 3: Network Preferences - Checkboxes use handleCheckboxChange) ... */}
 
-            <div className="space-y-1">
-                <label className="text-sm font-medium" htmlFor="confirmPassword">Confirm password</label>
-                <input
-                    id="confirmPassword"
-                    type="password"
-                    autoComplete="new-password"
-                    className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
-                    {...register("confirmPassword")}
-                    placeholder="••••••"
-                />
-                {errors.confirmPassword?.message && (
-                    <p className="text-xs text-red-600">{errors.confirmPassword.message}</p>
-                )}
-            </div>
-
-            <button
-                type="submit"
-                disabled={isSubmitting || pending}
-                className="h-10 w-full rounded-md bg-foreground text-background text-sm font-semibold hover:opacity-90 disabled:opacity-60"
-            >
-                {isSubmitting || pending ? "Creating account..." : "Create account"}
-            </button>
-        </form>
-    );
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full py-5 bg-black text-[#D4FF33] rounded-[2rem] font-black uppercase italic tracking-[0.2em] shadow-2xl hover:bg-[#D32F2F] hover:text-white transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+          >
+            {isSubmitting ? (
+              <Loader2 className="animate-spin" size={20} />
+            ) : (
+              <>
+                <CheckCircle2 size={20} /> Authorize New Identity
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 }
+
+// Re-usable High-Contrast Components
+const AdminInput = ({ label, ...props }: any) => (
+  <div className="space-y-1">
+    <label className="text-[10px] font-black uppercase text-slate-500 ml-1">
+      {label}
+    </label>
+    <div className="bg-slate-50 rounded-xl flex items-center px-4 h-[52px] border-2 border-transparent focus-within:border-[#D32F2F] transition-all">
+      <input
+        {...props}
+        className="w-full bg-transparent text-black text-xs font-black focus:outline-none"
+      />
+    </div>
+  </div>
+);
+
+const AdminSelect = ({ label, children, ...props }: any) => (
+  <div className="space-y-1">
+    <label className="text-[10px] font-black uppercase text-slate-500 ml-1">
+      {label}
+    </label>
+    <div className="relative">
+      <select
+        {...props}
+        className="w-full bg-slate-50 border-2 border-transparent focus:border-[#D32F2F] p-4 rounded-xl text-black text-xs font-black outline-none appearance-none cursor-pointer"
+      >
+        {children}
+      </select>
+      <ChevronDown
+        size={14}
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+      />
+    </div>
+  </div>
+);

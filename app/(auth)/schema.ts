@@ -41,6 +41,7 @@ export const registerSchema = z.object({
   // Coerce string -> number safely
   minPreferredAge: z.number().int().positive().optional(),
   maxPreferredAge: z.number().int().positive().optional(),
+  role: z.enum(["user", "admin"]).optional().default("user"),
 });
 
 export type SignupData = z.infer<typeof registerSchema>;

@@ -3,54 +3,87 @@
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 
-// Ensure this matches your Express app.use('/api/admin', ...)
-const API_BASE = `${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`;
+/**
+ * We derive the URL inside the functions or use a fallback to prevent 
+ * "undefined/api/..." errors if the env variable isn't loaded correctly.
+ */
+const getApiBase = () => {
+    const base = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000";
+    return `${base}/api/admin/users`;
+};
 
+/**
+ * Helper to fetch token from secure cookies
+ */
 async function getAuthToken() {
     const cookieStore = await cookies();
     return cookieStore.get('auth_token')?.value;
 }
 
-export const handleCreateUser = async (formData: FormData) => {
+/**
+ * CREATE USER (POST /api/admin/users)
+ * Supports Multer via FormData
+ */
+export const handleCreateUser = async (rawFormData: FormData) => {
+    const API_BASE = getApiBase();
     try {
         const token = await getAuthToken();
-        
-        // Debugging: Log the URL being hit to your console
-        console.log("Hitting URL:", API_BASE);
+        const cleanFormData = new FormData();
+
+        // Iterate through the mangled FormData and extract clean keys
+        for (const [key, value] of rawFormData.entries()) {
+            // This regex removes the Next.js action prefix (like "1_")
+            const cleanKey = key.replace(/^\d+_/, ""); 
+            cleanFormData.append(cleanKey, value);
+        }
 
         const response = await fetch(API_BASE, {
             method: 'POST',
             headers: { 
                 'Authorization': `Bearer ${token}` 
-                // Do NOT set Content-Type; fetch sets it for FormData automatically
+                // DO NOT set Content-Type here
             },
-            body: formData,
+            body: cleanFormData,
         });
 
-        // If the server returns 404, .json() might fail if it returns HTML
+        // Robust check: If server returns 404 or 500 HTML instead of JSON
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
-            return { success: false, message: `Server Error: Received ${response.status} ${response.statusText}` };
+            const errorText = await response.text();
+            console.error("Non-JSON Response received:", errorText);
+            return { 
+                success: false, 
+                message: `Server Error (${response.status}): Ensure backend route exists.` 
+            };
         }
 
         const result = await response.json();
 
         if (result.success) {
             revalidatePath('/admin/users');
-            return { success: true, message: 'User created successfully', data: result.user };
+            return { 
+                success: true, 
+                message: 'User created successfully', 
+                data: result.user 
+            };
         }
 
         return { success: false, message: result.message || 'Failed to create user' };
 
     } catch (error: any) {
         console.error("CREATE_USER_ERROR:", error);
-        return { success: false, message: error.message || 'An unexpected error occurred' };
+        return { 
+            success: false, 
+            message: error.message || 'An unexpected network error occurred' 
+        };
     }
 };
+
 /**
  * UPDATE USER (PUT /api/admin/users/:id)
  */
 export const handleUpdateUser = async (id: string, formData: FormData) => {
+    const API_BASE = getApiBase();
     try {
         const token = await getAuthToken();
         const response = await fetch(`${API_BASE}/${id}`, {
@@ -58,6 +91,11 @@ export const handleUpdateUser = async (id: string, formData: FormData) => {
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData,
         });
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            return { success: false, message: "Update failed: Server did not return JSON." };
+        }
 
         const result = await response.json();
         if (result.success) {
@@ -75,6 +113,7 @@ export const handleUpdateUser = async (id: string, formData: FormData) => {
  * DELETE USER (DELETE /api/admin/users/:id)
  */
 export const handleDeleteUser = async (id: string) => {
+    const API_BASE = getApiBase();
     try {
         const token = await getAuthToken();
         const response = await fetch(`${API_BASE}/${id}`, {
@@ -85,9 +124,9 @@ export const handleDeleteUser = async (id: string) => {
         const result = await response.json();
         if (result.success) {
             revalidatePath('/admin/users');
-            return { success: true, message: 'User deleted' };
+            return { success: true, message: 'User deleted successfully' };
         }
-        return { success: false, message: result.message };
+        return { success: false, message: result.message || 'Deletion failed' };
     } catch (error: any) {
         return { success: false, message: error.message };
     }
