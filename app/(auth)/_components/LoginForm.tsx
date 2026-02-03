@@ -2,115 +2,160 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, LoginData } from "../schema";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { LoginData, loginSchema } from "../schema";
-import { useTransition } from "react";
-import Image from "next/image";
+import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { useState, useTransition } from "react";
+import { handleLogin } from "@/lib/actions/auth-action";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation"; // Added for navigation
 
 export default function LoginForm() {
-  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const { checkAuth } = useAuth();
+  const router = useRouter(); // Initialize the router
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
-    mode: "onSubmit",
   });
 
-  const [pending, setTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
+  const passwordValue = watch("password");
 
-  const submit = async (values: LoginData) => {
-    setTransition(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      router.push("/home");
+  const onSubmit = async (data: LoginData) => {
+    setErrorMsg("");
+
+    startTransition(async () => {
+      try {
+        const result = await handleLogin(data);
+
+        if (!result.success) {
+          setErrorMsg(result.message || "Invalid email or password");
+          return;
+        }
+
+        // 1. Sync the AuthContext state
+        await checkAuth();
+
+        // 2. Get Role from result
+        const role = result.data?.role;
+
+        // 3. Navigation Logic
+        // router.refresh() is critical here: it forces Next.js to re-run
+        // the Middleware (proxy.ts) so it recognizes the new cookie.
+        if (role === "admin") {
+          router.push("/admin/users");
+        } else if (role === "user") {
+          router.push("/dashboard");
+        } else {
+          router.push("/");
+        }
+
+        router.refresh();
+      } catch (err: any) {
+        setErrorMsg(err.message || "Login Failed");
+      }
     });
-
-    console.log("login", values);
   };
 
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-5">
-      {/* Logo */}
-      <Link href = "/"  className="flex justify-center -mb-1">
-        <div className="flex justify-center -mb-6 -mt-4">
-          <Image
-            src="/images/imglogo.png"
-            alt="Mannmilap Logo"
-            width={160}
-            height={160}
-            className="block"
-            priority
-          />
+    <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl px-8 py-10 text-slate-900">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        {/* Email */}
+        <div>
+          <label className="text-xs font-semibold text-slate-600">
+            Email Address
+          </label>
+          <div className="mt-1 flex items-center gap-2 bg-slate-100 px-4 h-[46px] rounded-xl focus-within:ring-2 focus-within:ring-rose-400">
+            <Mail size={16} className="text-slate-400" />
+            <input
+              {...register("email")}
+              placeholder="you@example.com"
+              className="w-full bg-transparent text-sm outline-none"
+            />
+          </div>
+          {errors.email && (
+            <p className="text-[11px] text-red-500 mt-1">
+              {errors.email.message}
+            </p>
+          )}
         </div>
-      </Link>
 
-      {/* Header */}
-      <div className="text-center space-y-1">
-        <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
-        <p className="text-sm text-gray-600">
-          Sign in to continue your journey
-        </p>
-      </div>
+        {/* Password */}
+        <div>
+          <label className="text-xs font-semibold text-slate-600">
+            Password
+          </label>
+          <div className="mt-1 flex items-center gap-2 bg-slate-100 px-4 h-[46px] rounded-xl focus-within:ring-2 focus-within:ring-rose-400">
+            <Lock size={16} className="text-slate-400" />
+            <input
+              {...register("password")}
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              className="w-full bg-transparent text-sm outline-none"
+            />
+            {passwordValue && (
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-slate-400 hover:text-rose-500"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            )}
+          </div>
+          {errors.password && (
+            <p className="text-[11px] text-red-500 mt-1">
+              {errors.password.message}
+            </p>
+          )}
+        </div>
 
-      {/* Email */}
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">
-          Email Address
-        </label>
-        <input
-          {...register("email")}
-          type="email"
-          autoComplete="email"
-          placeholder="example@email.com"
-          className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm
-          text-gray-900 placeholder:text-rose-500
-          outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
-        />
-        {errors.email && (
-          <p className="text-xs text-red-600">{errors.email.message}</p>
+        {/* Forgot password */}
+        <div className="flex justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-[11px] text-slate-500 hover:text-rose-600"
+          >
+            Forgot password?
+          </Link>
+        </div>
+
+        {/* Error Message Display */}
+        {errorMsg && (
+          <div className="flex items-center gap-2 text-xs bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-lg">
+            <AlertCircle size={14} />
+            {errorMsg}
+          </div>
         )}
-      </div>
 
-      {/* Password */}
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Password</label>
-        <input
-          {...register("password")}
-          type="password"
-          autoComplete="current-password"
-          placeholder="Enter your password"
-          className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm
-          text-gray-900 placeholder:text-rose-500
-          outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
-        />
-        {errors.password && (
-          <p className="text-xs text-red-600">{errors.password.message}</p>
-        )}
-      </div>
-
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={isSubmitting || pending}
-        className="h-11 w-full rounded-lg bg-rose-600 text-white font-semibold
-        hover:bg-rose-700 transition disabled:opacity-60"
-      >
-        {isSubmitting || pending ? "Signing in..." : "Sign In"}
-      </button>
-
-      {/* Register Link */}
-      <p className="text-center text-sm text-gray-600">
-        New here?{" "}
-        <Link
-          href="/register"
-          className="font-semibold text-rose-600 hover:underline"
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={isSubmitting || pending}
+          className="w-full h-[48px] rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold transition flex items-center justify-center"
         >
-          Create a profile
+          {isSubmitting || pending ? (
+            <Loader2 className="animate-spin" size={18} />
+          ) : (
+            "Log In"
+          )}
+        </button>
+      </form>
+
+      {/* Footer */}
+      <p className="text-center text-xs text-slate-500 mt-8">
+        Don’t have an account?{" "}
+        <Link href="/register" className="text-rose-600 font-semibold">
+          Create one
         </Link>
       </p>
-    </form>
+    </div>
   );
 }

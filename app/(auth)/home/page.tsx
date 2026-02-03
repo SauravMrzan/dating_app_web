@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 
-export default function LandingPage() {
+export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#FFF1F3] text-[#4A1D24]">
       {/* Header */}

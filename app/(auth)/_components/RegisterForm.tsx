@@ -2,329 +2,234 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
-import { type RegisterData, registerSchema } from "../schema";
-import { useTransition, useState } from "react";
+import { registerSchema, SignupData } from "../schema";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import { useState, useTransition } from "react";
+import Link from "next/link";
+import {
+  User,
+  Mail,
+  Lock,
+  Phone,
+  Calendar,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Loader2,
+} from "lucide-react";
+import { handleRegister } from "@/lib/actions/auth-action";
+import { toast } from "react-hot-toast";
 
 const CULTURES = ["Brahmin", "Chhetri", "Newar", "Rai", "Magar", "Gurung"];
-const GENDERS = ["Male", "Female", "Other"];
-const INTERESTED_IN = ["Male", "Female", "Everyone"];
 
 export default function RegisterForm() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
-    trigger, // 👈 used for step-wise validation
-  } = useForm<RegisterData>({
+  } = useForm<SignupData>({
     resolver: zodResolver(registerSchema),
-    mode: "onTouched",
-    shouldUnregister: true,
-  
+    mode: "onSubmit",
   });
 
-  const [pending, startTransition] = useTransition();
+  const passwordValue = watch("password");
 
-  const submit = async (values: RegisterData) => {
+  // --- LOGIC: Handle Submit (Fixed Syntax) ---
+  const onSubmit = async (data: SignupData) => {
+    setError(null);
     startTransition(async () => {
       try {
-        const res = await fetch("/api/auth/register", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(values),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          alert(data.message || "Registration failed");
+        const result = await handleRegister(data);
+        
+        if (!result.success) {
+          setError(result.message || "Registration failed");
           return;
         }
 
+        toast.success("Account created! Please login.");
         router.push("/login");
-      } catch (err) {
-        alert("Something went wrong. Try again.");
+      } catch (err: any) {
+        setError(err.message || "An unexpected error occurred");
       }
     });
   };
 
-  const goNext = async () => {
-    let fields: (keyof RegisterData)[] = [];
-
-    if (step === 1) {
-      fields = ["username", "email", "password", "confirmPassword"];
-    }
-
-    if (step === 2) {
-      fields = ["fullName", "gender", "dateOfBirth", "culture"];
-    }
-
-    const valid = await trigger(fields);
-    if (valid) setStep(step + 1);
-  };
-
+  // --- UI: Component Return (Properly Outside onSubmit) ---
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-6">
-      {/* Logo */}
-      <div className="flex justify-center -mb-2 -mt-2">
-        <Image
-          src="/images/logoright.png"
-          alt="MannMilap Logo"
-          width={140}
-          height={140}
-          className="block"
-          priority
+    <div className="w-full text-slate-900">
+      <h2 className="text-2xl font-bold text-center mb-6">
+        Create your account
+      </h2>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-[10px] rounded-xl font-bold uppercase tracking-widest italic">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <InputField
+          placeholder="Full Name"
+          icon={<User size={16} />}
+          error={errors.fullName?.message}
+          {...register("fullName")}
         />
-      </div>
 
-      {/* Title */}
-      <div className="text-center leading-tight">
-        <h1 className="text-xl font-bold text-gray-900">Create your account</h1>
-        <p className="text-xs text-gray-600">Step {step} of 3</p>
-      </div>
+        <InputField
+          placeholder="Email"
+          icon={<Mail size={16} />}
+          error={errors.email?.message}
+          {...register("email")}
+        />
 
-      {/* Step 1 */}
-      {step === 1 && (
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-900">
-              Username
-            </label>
+        {/* Password Field */}
+        <div className="relative pt-1">
+          <div className={`bg-white rounded-xl flex items-center px-4 h-[48px] border-2 transition-all ${
+            errors.password ? "border-red-500" : "border-transparent focus-within:border-indigo-500 shadow-sm"
+          }`}>
             <input
-              {...register("username")}
-              placeholder="Choose a username"
-              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
-            />
-            {errors.username && (
-              <p className="text-xs text-red-500">{errors.username.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-900">Email</label>
-            <input
-              {...register("email")}
-              placeholder="you@example.com"
-              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
-            />
-            {errors.email && (
-              <p className="text-xs text-red-500">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-900">
-              Password
-            </label>
-            <input
-              type="password"
               {...register("password")}
-              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              className="w-full bg-transparent text-slate-900 text-xs focus:outline-none font-semibold"
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => setPasswordFocused(false)}
             />
-            {errors.password && (
-              <p className="text-xs text-red-500">{errors.password.message}</p>
+            {(passwordValue || passwordFocused) && (
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="mr-2 text-slate-400 hover:text-indigo-600 focus:outline-none"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             )}
+            <Lock size={16} className="text-slate-400" />
           </div>
+          {errors.password && <ErrorText msg={errors.password.message} />}
+        </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-900">
-              Confirm password
-            </label>
-            <input
-              type="password"
-              {...register("confirmPassword")}
-              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
-            />
-            {errors.confirmPassword && (
-              <p className="text-xs text-red-500">
-                {errors.confirmPassword.message}
-              </p>
-            )}
+        <InputField
+          placeholder="Phone (optional)"
+          icon={<Phone size={16} />}
+          error={errors.phone?.message}
+          {...register("phone")}
+        />
+
+        <SelectField error={errors.gender?.message} {...register("gender")}>
+          <option value="">Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </SelectField>
+
+        <InputField
+          type="date"
+          icon={<Calendar size={16} />}
+          error={errors.dateOfBirth?.message}
+          {...register("dateOfBirth")}
+        />
+
+        <SelectField error={errors.culture?.message} {...register("culture")}>
+          <option value="">Your Culture</option>
+          {CULTURES.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </SelectField>
+
+        <SelectField error={errors.interestedIn?.message} {...register("interestedIn")}>
+          <option value="">Interested In</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Everyone">Everyone</option>
+        </SelectField>
+
+        {/* Preferred Culture Checkboxes */}
+        <div className="pt-2 space-y-2">
+          <p className="text-xs font-semibold text-slate-700">Preferred Culture(s)</p>
+          <div className="grid grid-cols-2 gap-2">
+            {CULTURES.map((c) => (
+              <label key={c} className="flex items-center gap-2 text-xs">
+                <input type="checkbox" value={c} {...register("preferredCulture")} />
+                {c}
+              </label>
+            ))}
           </div>
         </div>
-      )}
 
-      {/* Step 2 */}
-      {step === 2 && (
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-900">
-              Full name
-            </label>
-            <input
-              {...register("fullName")}
-              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
-            />
-            {errors.fullName && (
-              <p className="text-xs text-red-500">{errors.fullName.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-900">Gender</label>
-            <select
-              {...register("gender")}
-              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
-            >
-              <option value="">Select gender</option>
-              {GENDERS.map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
-              ))}
-            </select>
-            {errors.gender && (
-              <p className="text-xs text-red-500">{errors.gender.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-900">
-              Date of birth
-            </label>
-            <input
-              type="date"
-              {...register("dateOfBirth")}
-              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
-            />
-            {errors.dateOfBirth && (
-              <p className="text-xs text-red-500">
-                {errors.dateOfBirth.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-900">
-              Your culture
-            </label>
-            <select
-              {...register("culture")}
-              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
-            >
-              <option value="">Select culture</option>
-              {CULTURES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            {errors.culture && (
-              <p className="text-xs text-red-500">{errors.culture.message}</p>
-            )}
-          </div>
+        {/* Age Range Inputs */}
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <InputField
+            type="number"
+            placeholder="Min Age"
+            {...register("minPreferredAge", { valueAsNumber: true })}
+          />
+          <InputField
+            type="number"
+            placeholder="Max Age"
+            {...register("maxPreferredAge", { valueAsNumber: true })}
+          />
         </div>
-      )}
 
-      {/* Step 3 */}
-      {step === 3 && (
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-900">
-              Interested in
-            </label>
-            <select
-              {...register("interestedIn")}
-              className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-blue-700"
-            >
-              <option value="">Select preference</option>
-              {INTERESTED_IN.map((i) => (
-                <option key={i} value={i}>
-                  {i}
-                </option>
-              ))}
-            </select>
-            {errors.interestedIn && (
-              <p className="text-xs text-red-500">
-                {errors.interestedIn.message}
-              </p>
-            )}
-          </div>
+        <p className="text-xs text-slate-600 text-center pt-2">
+          Already have an account?{" "}
+          <Link href="/login" className="text-[#C8344A] font-semibold hover:underline">
+            Login
+          </Link>
+        </p>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-900">
-              Preferred cultures
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {CULTURES.map((culture) => (
-                <label key={culture} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    value={culture}
-                    {...register("preferredCulture")}
-                  />
-                  <span className="text-sm text-blue-700">{culture}</span>
-                </label>
-              ))}
-            </div>
-            {errors.preferredCulture && (
-              <p className="text-xs text-red-500">
-                {errors.preferredCulture.message}
-              </p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              type="number"
-              {...register("minPreferredAge", { valueAsNumber: true })}
-              placeholder="Min age"
-              className="h-10 w-full rounded-lg border px-3 text-sm text-blue-700"
-            />
-            <input
-              type="number"
-              {...register("maxPreferredAge", { valueAsNumber: true })}
-              placeholder="Max age"
-              className="h-10 w-full rounded-lg border px-3 text-sm text-blue-700"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Navigation */}
-      <div className="flex gap-3 pt-4">
-        {step > 1 && (
-          <button
-            type="button"
-            onClick={() => setStep(step - 1)}
-            className="flex-1 h-10 rounded-lg border bg-blue-500"
-          >
-            Back
-          </button>
-        )}
-
-        {step < 3 ? (
-          <button
-            type="button"
-            onClick={goNext}
-            className="flex-1 h-10 rounded-lg bg-rose-500 "
-          >
-            Next
-          </button>
-        ) : (
-          <button
-            type="submit"
-            disabled={isSubmitting || pending}
-            className="flex-1 h-10 rounded-lg bg-rose-500 text-white"
-          >
-            {isSubmitting || pending ? "Creating..." : "Create account"}
-          </button>
-        )}
-      </div>
-
-      <p className="text-center text-sm text-rose-300">
-        Already have an account?{" "}
-        <Link href="/login" className="text-rose-600 font-semibold" >
-          Log in
-        </Link>
-      </p>
-    </form>
+        <button
+          type="submit"
+          disabled={isSubmitting || isPending}
+          className="w-full py-4 rounded-xl bg-[#C8344A] text-white font-bold hover:bg-[#B52E42] transition shadow-lg shadow-red-900/10 disabled:opacity-70"
+        >
+          {isSubmitting || isPending ? (
+            <Loader2 className="animate-spin mx-auto" size={18} />
+          ) : (
+            "Sign Up"
+          )}
+        </button>
+      </form>
+    </div>
   );
+}
+
+// --- SUB-COMPONENTS ---
+
+function InputField({ icon, error, ...props }: any) {
+  return (
+    <div className="relative">
+      <div className="bg-white rounded-xl flex items-center px-4 h-[48px] border-2 border-transparent focus-within:border-indigo-500 shadow-sm transition-all">
+        <input {...props} className="w-full bg-transparent text-slate-900 text-xs focus:outline-none font-semibold placeholder-slate-400" />
+        {icon}
+      </div>
+      {error && <ErrorText msg={error} />}
+    </div>
+  );
+}
+
+function SelectField({ children, error, ...props }: any) {
+  return (
+    <div className="relative">
+      <div className="bg-white rounded-xl flex items-center px-4 h-[48px] border-2 border-transparent focus-within:border-indigo-500 shadow-sm transition-all">
+        <select {...props} className="w-full bg-transparent text-slate-900 text-xs focus:outline-none font-semibold appearance-none cursor-pointer">
+          {children}
+        </select>
+        <ChevronDown size={16} className="text-slate-400" />
+      </div>
+      {error && <ErrorText msg={error} />}
+    </div>
+  );
+}
+
+function ErrorText({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p className="text-[11px] text-red-500 mt-1 ml-2 italic font-medium uppercase">{msg}</p>;
 }
