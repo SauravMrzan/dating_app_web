@@ -1,25 +1,38 @@
 "use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { 
-  Users, 
-  LayoutDashboard, 
-  UserPlus, 
-  Settings, 
+import React, { useRef } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { handleLogout } from "@/lib/actions/auth-action";
+import {
+  Users,
+  LayoutDashboard,
+  UserPlus,
+  Settings,
   LogOut,
-  ShieldCheck
-} from 'lucide-react';
+  ShieldCheck,
+} from "lucide-react";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
+  const logoutFormRef = useRef<HTMLFormElement>(null);
 
   const menuItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
-    { name: 'User Management', icon: Users, path: '/admin/users' },
-    { name: 'Create User', icon: UserPlus, path: '/admin/users/create' },
-  ];
+    { name: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
+    { name: "User Management", icon: Users, path: "/admin/users" },
+    { name: "Create User", icon: UserPlus, path: "/admin/users/create" },
+  ];  
+
+  const handleConfirmLogout = () => {
+    const confirmed = window.confirm("Are you sure you want to logout?");
+    if (confirmed) {
+      logoutFormRef.current?.requestSubmit();
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-[#F8F9FA]">
@@ -29,7 +42,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="bg-[#D32F2F] p-2 rounded-lg">
             <ShieldCheck className="text-white" size={20} />
           </div>
-          <span className="font-bold text-gray-800 tracking-tight">Admin Portal</span>
+          <span className="font-bold text-gray-800 tracking-tight">
+            Admin Portal
+          </span>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
@@ -40,9 +55,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={item.name}
                 href={item.path}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                  isActive 
-                    ? 'bg-[#FEECEB] text-[#D32F2F]' 
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                  isActive
+                    ? "bg-[#FEECEB] text-[#D32F2F]"
+                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                 }`}
               >
                 <item.icon size={18} />
@@ -52,11 +67,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
+         {/* LOGOUT */}
         <div className="p-4 border-t border-gray-50">
-          <button className="flex items-center gap-3 px-4 py-3 w-full text-sm font-semibold text-gray-500 hover:text-red-600 transition-colors">
-            <LogOut size={18} />
-            Exit Admin
-          </button>
+          <form ref={logoutFormRef} action={handleLogout}>
+            <button
+              type="button"
+              onClick={handleConfirmLogout}
+              className="flex items-center gap-3 px-4 py-3 w-full text-sm font-semibold text-gray-500 hover:text-red-600 transition-colors"
+            >
+              <LogOut size={18} />
+              Exit Admin
+            </button>
+          </form>
         </div>
       </aside>
 
@@ -64,21 +86,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <main className="flex-1 overflow-y-auto">
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
           <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-            {pathname.split('/').pop()?.replace('-', ' ')}
+            {pathname.split("/").pop()?.replace("-", " ")}
           </h2>
           <div className="flex items-center gap-4">
-             <div className="text-right">
-                <p className="text-xs font-bold text-gray-900">Admin Session</p>
-                <p className="text-[10px] text-gray-400">System Controller</p>
-             </div>
-             <div className="w-8 h-8 rounded-full bg-gray-200 border border-gray-300" />
+            <div className="text-right">
+              <p className="text-xs font-bold text-gray-900">Admin Session</p>
+              <p className="text-[10px] text-gray-400">System Controller</p>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-gray-200 border border-gray-300" />
           </div>
         </header>
 
         <section className="p-8">
-          <div className="max-w-6xl mx-auto">
-            {children}
-          </div>
+          <div className="max-w-6xl mx-auto">{children}</div>
         </section>
       </main>
     </div>

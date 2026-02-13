@@ -77,19 +77,18 @@ export default function CreateUser() {
 
     const data = new FormData();
 
-    // Loop through state and append to FormData
     Object.entries(formData).forEach(([key, value]) => {
       if (key === "preferredCulture" && Array.isArray(value)) {
-        // Append each item individually so Multer/Zod treats it as an array
         value.forEach((item) => data.append("preferredCulture", item));
       } else {
         data.append(key, String(value));
       }
     });
 
-    // if (file) {
-    //   data.append("profilePicture", file);
-    // }
+    // ✅ THIS MUST EXIST
+    if (file) {
+      data.append("profilePicture", file);
+    }
 
     try {
       const response = await axios.post(
@@ -101,13 +100,13 @@ export default function CreateUser() {
       if (response.data.success) {
         toast.success("Identity Authorized Successfully!");
         router.push("/admin/users");
-        router.refresh(); // Ensure the user list updates
+        router.refresh();
       }
     } catch (err: any) {
       console.error("Upload Error:", err);
-      const errorMessage =
-        err.response?.data?.message || "Auth Failed: Check server logs.";
-      toast.error(errorMessage);
+      toast.error(
+        err.response?.data?.message || "Auth Failed: Check server logs.",
+      );
     } finally {
       setIsSubmitting(false);
     }

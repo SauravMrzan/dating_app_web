@@ -4,14 +4,15 @@ export const API = {
   AUTH: {
     LOGIN: "/api/auth/login",
     REGISTER: "/api/auth/register",
-    WHOAMI: "/api/whoami",
-    UPDATEPROFILE: "/api/update-profile",
+    WHOAMI: "/api/auth/whoami",
+    UPDATEPROFILE: "/api/auth/update-profile",
   },
+
   ADMIN: {
-    STATS: "/api/admin/dashboard-stats", // Add this line
+    STATS: "/api/admin/dashboard-stats",
     USERS: "/api/admin/users",
     USER: {
-      CREATE: "/api/admin/users/",
+      CREATE: "/api/admin/users",
     },
   },
 };

@@ -34,7 +34,7 @@ export async function proxy(req: NextRequest) {
   // --- LOGIC GATE 1: UNAUTHORIZED USERS ---
   // If the user is NOT logged in and tries to access a protected area
   if (!user && isProtectedRoute) {
-    console.log("⛔ Unauthorized: Redirecting to Login");
+    console.log(" Unauthorized: Redirecting to Login");
     return NextResponse.redirect(new URL("/login", req.url));
   }
 

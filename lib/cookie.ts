@@ -1,47 +1,72 @@
 "use server";
+
 import { cookies } from "next/headers";
 
+/**
+ * Save JWT token securely
+ */
 export const setAuthToken = async (token: string) => {
-  const cookieStore = await cookies();
-  cookieStore.set({ name: "auth_token", value: token });
-};
+  const cookieStore = cookies();
 
-export const getAuthToken = async () => {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token")?.value;
-  return token;
-};
-
-export const setUserData = async (userData: any) => {
-  const cookieStore = await cookies();
-  // Ensure we are saving a clean, encoded string
-  const dataString = JSON.stringify(userData);
-  cookieStore.set({
-    name: "user_data",
-    value: encodeURIComponent(dataString),
-    path: "/", // Ensure it's available across the whole site
+  (await cookieStore).set({
+    name: "auth_token",
+    value: token,
+    httpOnly: true, // 🔒 VERY IMPORTANT
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7, // 7 days
   });
 };
 
-export const getUserData = async () => {
-  const cookieStore = await cookies();
-  const userDataStr = cookieStore.get("user_data")?.value;
+/**
+ * Get JWT token (server-side only)
+ */
+export const getAuthToken = async () => {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth_token")?.value;
+    return token;
+}
 
-  // Check if it exists AND isn't literally the string "undefined"
-  if (userDataStr && userDataStr !== "undefined") {
-    try {
-      const decodedData = decodeURIComponent(userDataStr);
-      return JSON.parse(decodedData);
-    } catch (error) {
-      console.error("❌ Cookie Parse Error:", error);
-      return null;
-    }
-  }
-  return null;
+/**
+ * Save user data (non-sensitive)
+ */
+export const setUserData = async (userData: any) => {
+  const cookieStore = cookies();
+
+  (await cookieStore).set({
+    name: "user_data",
+    value: encodeURIComponent(JSON.stringify(userData)),
+    httpOnly: false, // frontend CAN read this
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,
+  });
 };
 
+/**
+ * Read user data safely
+ */
+export const getUserData = async () => {
+  const cookieStore = cookies();
+  const userDataStr = (await cookieStore).get("user_data")?.value;
+
+  if (!userDataStr || userDataStr === "undefined") return null;
+
+  try {
+    return JSON.parse(decodeURIComponent(userDataStr));
+  } catch (error) {
+    console.error("❌ Cookie parse error:", error);
+    return null;
+  }
+};
+
+/**
+ * Clear cookies on logout
+ */
 export const clearAuthCookies = async () => {
-  const cookieStore = await cookies();
-  cookieStore.delete("auth_token");
-  cookieStore.delete("user_data");
+  const cookieStore = cookies();
+  (await cookieStore).delete("auth_token");
+  (await cookieStore).delete("user_data");
 };

@@ -1,14 +1,5 @@
 import z from "zod";
 
-export const loginSchema = z.object({
-  email: z.string().email({ message: "Enter valid email." }),
-  password: z
-    .string()
-    .min(6, { message: "Password must be atleast 6 characters" }),
-});
-
-export type LoginData = z.infer<typeof loginSchema>;
-
 export const registerSchema = z.object({
   // Basic Registration
   email: z.string().email("Invalid email address"),
@@ -44,4 +35,13 @@ export const registerSchema = z.object({
   role: z.enum(["user", "admin"]).optional().default("user"),
 });
 
-export type SignupData = z.infer<typeof registerSchema>;
+export type SignupData = z.input<typeof registerSchema>;
+
+export const loginSchema = z.object({
+  email: z.string().email({ message: "Enter valid email." }),
+  password: z
+    .string()
+    .min(6, { message: "Password must be atleast 6 characters" }),
+});
+
+export type LoginData = z.infer<typeof loginSchema>;

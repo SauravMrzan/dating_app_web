@@ -2,61 +2,63 @@ import { SignupData, LoginData } from "../../app/(auth)/schema";
 import axios from "./axios";
 import { API } from "./endpoints";
 
+/**
+ * REGISTER USER
+ * POST /api/auth/register
+ */
 export const register = async (registerData: SignupData) => {
   try {
-    const response = await axios.post(
-      API.AUTH.REGISTER, // path
-      registerData // body data
-    );
-    return response.data; // what controller from backend sends
-  } catch (err: Error | any) {
-    throw new Error(
-      err.response?.data?.message ||
-      err.message ||
-      "Registration failed"
-    );
+    const response = await axios.post(API.AUTH.REGISTER, registerData);
+    return response.data;
+  } catch (error: any) {
+    console.error("REGISTER_API_ERROR:", error);
+    throw new Error(error?.response?.data?.message || "Registration failed");
   }
 };
 
+/**
+ * LOGIN USER
+ * POST /api/auth/login
+ */
 export const login = async (loginData: LoginData) => {
   try {
-    const response = await axios.post(
-      API.AUTH.LOGIN, // path
-      loginData // body data
-    );
-    return response.data; // what controller from backend sends
-  } catch (err: Error | any) {
-    throw new Error(
-      err.response?.data?.message ||
-      err.message ||
-      "Login failed"
-    );
+    const response = await axios.post(API.AUTH.LOGIN, loginData);
+    return response.data;
+  } catch (error: any) {
+    console.error("LOGIN_API_ERROR:", error);
+    throw new Error(error?.response?.data?.message || "Login failed");
   }
 };
+
+/**
+ * WHO AM I
+ * GET /api/auth/whoami
+ */
 export const whoAmi = async () => {
   try {
     const response = await axios.get(API.AUTH.WHOAMI);
     return response.data;
-  } catch (error: Error | any) {
-    throw new Error(error.response?.data?.message
-      || error.message || 'Whoami failed');
+  } catch (error: any) {
+    console.error("WHOAMI_API_ERROR:", error);
+    throw new Error(error?.response?.data?.message || "WhoAmI failed");
   }
-}
+};
 
-export const updateProfile = async (profileData: any) => {
+/**
+ * UPDATE PROFILE
+ * PUT /api/auth/update-profile
+ * Supports Multer (profile picture upload)
+ */
+export const updateProfile = async (formData: FormData) => {
   try {
     const response = await axios.put(
       API.AUTH.UPDATEPROFILE,
-      profileData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data', // for file upload/multer
-        }
-      }
+      formData,
+      // ❌ DO NOT set Content-Type
     );
     return response.data;
-  } catch (error: Error | any) {
-    throw new Error(error.response?.data?.message
-      || error.message || 'Update profile failed');
+  } catch (error: any) {
+    console.error("UPDATE_PROFILE_API_ERROR:", error);
+    throw new Error(error?.response?.data?.message || "Update profile failed");
   }
-}
+};
