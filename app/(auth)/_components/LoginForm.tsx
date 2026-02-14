@@ -72,7 +72,7 @@ export default function LoginForm() {
           <label className="text-xs font-semibold text-slate-600">
             Email Address
           </label>
-          <div className="mt-1 flex items-center gap-2 bg-slate-100 px-4 h-[46px] rounded-xl focus-within:ring-2 focus-within:ring-rose-400">
+          <div className="mt-1 flex items-center gap-2 bg-slate-100 px-4 h-11.5 rounded-xl focus-within:ring-2 focus-within:ring-rose-400">
             <Mail size={16} className="text-slate-400" />
             <input
               {...register("email")}
@@ -92,7 +92,7 @@ export default function LoginForm() {
           <label className="text-xs font-semibold text-slate-600">
             Password
           </label>
-          <div className="mt-1 flex items-center gap-2 bg-slate-100 px-4 h-[46px] rounded-xl focus-within:ring-2 focus-within:ring-rose-400">
+          <div className="mt-1 flex items-center gap-2 bg-slate-100 px-4 h-11.5 rounded-xl focus-within:ring-2 focus-within:ring-rose-400">
             <Lock size={16} className="text-slate-400" />
             <input
               {...register("password")}
@@ -139,7 +139,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={isSubmitting || pending}
-          className="w-full h-[48px] rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold transition flex items-center justify-center"
+          className="w-full h-12 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold transition flex items-center justify-center"
         >
           {isSubmitting || pending ? (
             <Loader2 className="animate-spin" size={18} />
