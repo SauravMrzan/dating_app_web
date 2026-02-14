@@ -45,7 +45,7 @@ export default function DatingAdminDashboard() {
 
   if (!mounted || loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#050505]">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-#050505">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
@@ -63,8 +63,8 @@ export default function DatingAdminDashboard() {
     <div className="space-y-8 relative">
       {/* Brand Ambient Glow */}
       <div className="fixed inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-rose-900/20 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-orange-900/20 rounded-full blur-[120px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-500px h-500px bg-rose-900/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-500px h-500px bg-orange-900/20 rounded-full blur-[120px]" />
       </div>
 
       {/* Header Section */}
@@ -74,7 +74,7 @@ export default function DatingAdminDashboard() {
         className="relative z-10"
       >
         <div className="flex items-center gap-4 mb-2">
-          <div className="p-3 bg-gradient-to-tr from-rose-600 to-orange-500 rounded-2xl shadow-lg shadow-rose-500/20">
+          <div className="p-3 bg-linear-to-tr from-rose-600 to-orange-500 rounded-2xl shadow-lg shadow-rose-500/20">
             <PieChart size={24} className="text-white" />
           </div>
           <div>
@@ -120,7 +120,7 @@ export default function DatingAdminDashboard() {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4 }}
-        className="bg-[#0A0A0A] border border-white/5 rounded-[32px] p-8 backdrop-blur-md relative z-10 shadow-2xl"
+        className="bg-[#0A0A0A] border border-white/5 rounded-32px p-8 backdrop-blur-md relative z-10 shadow-2xl"
       >
         <div className="flex items-center justify-between mb-8">
           <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -141,7 +141,7 @@ export default function DatingAdminDashboard() {
                 className="flex items-center justify-between group py-2"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-white/5 to-white/10 border border-white/10 flex items-center justify-center text-xs font-bold text-gray-400">
+                  <div className="w-10 h-10 rounded-full bg-linear-to-br from-white/5 to-white/10 border border-white/10 flex items-center justify-center text-xs font-bold text-gray-400">
                     {user.fullName.charAt(0)}
                   </div>
                   <div>
@@ -181,7 +181,7 @@ function MetricCard({ icon: Icon, label, value, color, delay, highlight = false 
       transition={{ delay, duration: 0.5 }}
       whileHover={{ y: -4 }}
       className={`p-7 bg-[#0A0A0A] border border-white/5 rounded-[28px] relative overflow-hidden group ${
-        highlight ? 'bg-gradient-to-br from-rose-950/20 to-transparent border-rose-500/20' : ''
+        highlight ? 'bg-linear-to-br from-rose-950/20 to-transparent border-rose-500/20' : ''
       }`}
     >
       <div className="relative z-10">

@@ -95,7 +95,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
   };
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+    <div className="flex flex-col items-center justify-center min-h-100 gap-4">
       <Loader2 className="animate-spin text-[#D32F2F]" size={32} />
       <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading Registry...</p>
     </div>
@@ -144,7 +144,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Update Portrait</p>
           </div>
 
-          <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+          <div className="bg-white p-6 rounded-4xl border border-gray-100 shadow-sm">
             <div className="flex items-center gap-3 text-gray-900 mb-4">
               <Shield size={18} className="text-[#D32F2F]" />
               <span className="text-xs font-black uppercase tracking-widest">Access Control</span>
