@@ -92,7 +92,7 @@ export default function RegisterForm() {
         {/* Password Field */}
         <div className="relative pt-1">
           <div
-            className={`bg-white rounded-xl flex items-center px-4 h-[48px] border-2 transition-all ${
+            className={`bg-white rounded-xl flex items-center px-4 h-12 border-2 transition-all ${
               errors.password
                 ? "border-red-500"
                 : "border-transparent focus-within:border-indigo-500 shadow-sm"
@@ -224,7 +224,7 @@ export default function RegisterForm() {
 function InputField({ icon, error, ...props }: any) {
   return (
     <div className="relative">
-      <div className="bg-white rounded-xl flex items-center px-4 h-[48px] border-2 border-transparent focus-within:border-indigo-500 shadow-sm transition-all">
+      <div className="bg-white rounded-xl flex items-center px-4 h-12 border-2 border-transparent focus-within:border-indigo-500 shadow-sm transition-all">
         <input
           {...props}
           className="w-full bg-transparent text-slate-900 text-xs focus:outline-none font-semibold placeholder-slate-400"
@@ -239,7 +239,7 @@ function InputField({ icon, error, ...props }: any) {
 function SelectField({ children, error, ...props }: any) {
   return (
     <div className="relative">
-      <div className="bg-white rounded-xl flex items-center px-4 h-[48px] border-2 border-transparent focus-within:border-indigo-500 shadow-sm transition-all">
+      <div className="bg-white rounded-xl flex items-center px-4 h-12 border-2 border-transparent focus-within:border-indigo-500 shadow-sm transition-all">
         <select
           {...props}
           className="w-full bg-transparent text-slate-900 text-xs focus:outline-none font-semibold appearance-none cursor-pointer"
