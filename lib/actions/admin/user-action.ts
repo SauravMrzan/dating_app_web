@@ -36,7 +36,7 @@ export const handleCreateUser = async (rawFormData: FormData) => {
 
     const cleanFormData = new FormData();
 
-    // Remove Next.js action key prefixes (e.g. "1_name")
+    // ✅ Ensure keys match backend DTO (remove Next.js prefixes)
     for (const [key, value] of rawFormData.entries()) {
       const cleanKey = key.replace(/^\d+_/, "");
       cleanFormData.append(cleanKey, value);
@@ -46,20 +46,10 @@ export const handleCreateUser = async (rawFormData: FormData) => {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
-        // DO NOT set Content-Type for FormData
+        // ⚠️ Do not set Content-Type manually for FormData
       },
       body: cleanFormData,
     });
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType?.includes("application/json")) {
-      const text = await response.text();
-      console.error("CREATE_USER_NON_JSON:", text);
-      return {
-        success: false,
-        message: `Server error (${response.status})`,
-      };
-    }
 
     const result = await response.json();
 
@@ -107,14 +97,6 @@ export const handleUpdateUser = async (id: string, formData: FormData) => {
       body: formData,
     });
 
-    const contentType = response.headers.get("content-type");
-    if (!contentType?.includes("application/json")) {
-      return {
-        success: false,
-        message: "Update failed: Invalid server response",
-      };
-    }
-
     const result = await response.json();
 
     if (!response.ok) {
@@ -130,6 +112,7 @@ export const handleUpdateUser = async (id: string, formData: FormData) => {
     return {
       success: true,
       message: "User updated successfully",
+      data: result.user,
     };
   } catch (error: any) {
     console.error("UPDATE_USER_ERROR:", error);
@@ -159,14 +142,6 @@ export const handleDeleteUser = async (id: string) => {
         Authorization: `Bearer ${token}`,
       },
     });
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType?.includes("application/json")) {
-      return {
-        success: false,
-        message: "Deletion failed: Invalid server response",
-      };
-    }
 
     const result = await response.json();
 
