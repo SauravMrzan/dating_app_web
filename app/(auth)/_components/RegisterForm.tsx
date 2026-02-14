@@ -47,7 +47,7 @@ export default function RegisterForm() {
     startTransition(async () => {
       try {
         const result = await handleRegister(data);
-        
+
         if (!result.success) {
           setError(result.message || "Registration failed");
           return;
@@ -91,9 +91,13 @@ export default function RegisterForm() {
 
         {/* Password Field */}
         <div className="relative pt-1">
-          <div className={`bg-white rounded-xl flex items-center px-4 h-[48px] border-2 transition-all ${
-            errors.password ? "border-red-500" : "border-transparent focus-within:border-indigo-500 shadow-sm"
-          }`}>
+          <div
+            className={`bg-white rounded-xl flex items-center px-4 h-12 border-2 transition-all ${
+              errors.password
+                ? "border-red-500"
+                : "border-transparent focus-within:border-indigo-500 shadow-sm"
+            }`}
+          >
             <input
               {...register("password")}
               type={showPassword ? "text" : "password"}
@@ -140,11 +144,16 @@ export default function RegisterForm() {
         <SelectField error={errors.culture?.message} {...register("culture")}>
           <option value="">Your Culture</option>
           {CULTURES.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={c} value={c}>
+              {c}
+            </option>
           ))}
         </SelectField>
 
-        <SelectField error={errors.interestedIn?.message} {...register("interestedIn")}>
+        <SelectField
+          error={errors.interestedIn?.message}
+          {...register("interestedIn")}
+        >
           <option value="">Interested In</option>
           <option value="Male">Male</option>
           <option value="Female">Female</option>
@@ -153,11 +162,17 @@ export default function RegisterForm() {
 
         {/* Preferred Culture Checkboxes */}
         <div className="pt-2 space-y-2">
-          <p className="text-xs font-semibold text-slate-700">Preferred Culture(s)</p>
+          <p className="text-xs font-semibold text-slate-700">
+            Preferred Culture(s)
+          </p>
           <div className="grid grid-cols-2 gap-2">
             {CULTURES.map((c) => (
               <label key={c} className="flex items-center gap-2 text-xs">
-                <input type="checkbox" value={c} {...register("preferredCulture")} />
+                <input
+                  type="checkbox"
+                  value={c}
+                  {...register("preferredCulture")}
+                />
                 {c}
               </label>
             ))}
@@ -180,7 +195,10 @@ export default function RegisterForm() {
 
         <p className="text-xs text-slate-600 text-center pt-2">
           Already have an account?{" "}
-          <Link href="/login" className="text-[#C8344A] font-semibold hover:underline">
+          <Link
+            href="/login"
+            className="text-[#C8344A] font-semibold hover:underline"
+          >
             Login
           </Link>
         </p>
@@ -206,8 +224,11 @@ export default function RegisterForm() {
 function InputField({ icon, error, ...props }: any) {
   return (
     <div className="relative">
-      <div className="bg-white rounded-xl flex items-center px-4 h-[48px] border-2 border-transparent focus-within:border-indigo-500 shadow-sm transition-all">
-        <input {...props} className="w-full bg-transparent text-slate-900 text-xs focus:outline-none font-semibold placeholder-slate-400" />
+      <div className="bg-white rounded-xl flex items-center px-4 h-12 border-2 border-transparent focus-within:border-indigo-500 shadow-sm transition-all">
+        <input
+          {...props}
+          className="w-full bg-transparent text-slate-900 text-xs focus:outline-none font-semibold placeholder-slate-400"
+        />
         {icon}
       </div>
       {error && <ErrorText msg={error} />}
@@ -218,8 +239,11 @@ function InputField({ icon, error, ...props }: any) {
 function SelectField({ children, error, ...props }: any) {
   return (
     <div className="relative">
-      <div className="bg-white rounded-xl flex items-center px-4 h-[48px] border-2 border-transparent focus-within:border-indigo-500 shadow-sm transition-all">
-        <select {...props} className="w-full bg-transparent text-slate-900 text-xs focus:outline-none font-semibold appearance-none cursor-pointer">
+      <div className="bg-white rounded-xl flex items-center px-4 h-12 border-2 border-transparent focus-within:border-indigo-500 shadow-sm transition-all">
+        <select
+          {...props}
+          className="w-full bg-transparent text-slate-900 text-xs focus:outline-none font-semibold appearance-none cursor-pointer"
+        >
           {children}
         </select>
         <ChevronDown size={16} className="text-slate-400" />
@@ -231,5 +255,9 @@ function SelectField({ children, error, ...props }: any) {
 
 function ErrorText({ msg }: { msg?: string }) {
   if (!msg) return null;
-  return <p className="text-[11px] text-red-500 mt-1 ml-2 italic font-medium uppercase">{msg}</p>;
+  return (
+    <p className="text-[11px] text-red-500 mt-1 ml-2 italic font-medium uppercase">
+      {msg}
+    </p>
+  );
 }

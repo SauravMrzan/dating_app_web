@@ -7,128 +7,146 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 /**
- * Handles the Registration Logic
+ * REGISTER
  */
 export const handleRegister = async (data: SignupData) => {
   try {
     const result = await register(data);
-    if (result.success) {
+
+    if (!result?.success) {
       return {
-        success: true,
-        message: "Registration successful",
-        data: result.data,
+        success: false,
+        message: result?.message ?? "Registration failed",
       };
     }
+
     return {
-      success: false,
-      message: result.message || "Registration failed",
+      success: true,
+      data: result.data,
     };
   } catch (error: any) {
-    console.error("Registration Server Error:", error);
+    console.error("REGISTER_ACTION_ERROR:", error);
     return {
       success: false,
-      message: error.message || "An unexpected error occurred",
+      message: error.message ?? "Unexpected server error",
     };
   }
 };
 
 /**
- * Handles the Login Logic
+ * LOGIN
  */
 export const handleLogin = async (data: LoginData) => {
   try {
     const result = await login(data);
 
-    if (result.success) {
-      // Extract the user object. Your backend returns it in 'user' or 'data'.
-      // We prioritize 'result.user' then 'result.data'.
-      const userObject = result.user || result.data || result;
-
-      // Ensure the role exists before saving to cookie
-      if (!userObject.role) {
-        console.warn(
-          "⚠️ Warning: Role missing in backend response",
-          userObject,
-        );
-      }
-
-      await setAuthToken(result.token);
-
-      // Save the user object to the 'user_data' cookie for the proxy/middleware
-      await setUserData({ ...userObject });
-
+    if (!result?.success || !result?.token) {
       return {
-        success: true,
-        data: userObject,
+        success: false,
+        message: result?.message ?? "Invalid credentials",
       };
     }
-    return { success: false, message: result.message || "Login failed" };
+
+    // 🔒 Normalize user payload (IMPORTANT)
+    const user = {
+      id: result.user?.id ?? result.data?.id,
+      email: result.user?.email ?? result.data?.email,
+      role: result.user?.role ?? result.data?.role,
+      ...result.user,
+    };
+
+    await setAuthToken(result.token);
+    await setUserData(user);
+
+    // Optional UI revalidation
+    revalidatePath("/admin");
+    revalidatePath("/user");
+
+    return {
+      success: true,
+      data: user,
+    };
   } catch (error: any) {
-    console.error("Login Action Error:", error);
-    return { success: false, message: error.message };
+    console.error("LOGIN_ACTION_ERROR:", error);
+    return {
+      success: false,
+      message: error.message ?? "Unexpected login error",
+    };
   }
 };
 
 /**
- * Handles Logout Logic
+ * LOGOUT
  */
 export const handleLogout = async () => {
   try {
     await clearAuthCookies();
+
+    // 🔥 Invalidate protected UI
+    revalidatePath("/admin");
+    revalidatePath("/user");
   } catch (error) {
-    console.error("Logout Error:", error);
+    console.error("LOGOUT_ACTION_ERROR:", error);
   }
 
-  return redirect("/login");
+  redirect("/login");
 };
 
 /**
- * Fetch current user data from backend
+ * WHO AM I
  */
-export async function handleWhoAmI() {
+export const handleWhoAmI = async () => {
   try {
     const result = await whoAmi();
-    if (result.success) {
+
+    if (!result?.success) {
       return {
-        success: true,
-        message: "User data fetched successfully",
-        data: result.data,
+        success: false,
+        message: result?.message ?? "Not authenticated",
       };
     }
+
     return {
-      success: false,
-      message: result.message || "Failed to fetch user data",
+      success: true,
+      data: result.data,
     };
   } catch (error: any) {
-    return { success: false, message: error.message };
+    console.error("WHOAMI_ACTION_ERROR:", error);
+    return {
+      success: false,
+      message: error.message ?? "Unexpected error",
+    };
   }
-}
+};
 
 /**
- * Updates user profile including profile picture (FormData)
+ * UPDATE PROFILE
  */
-export async function handleUpdateProfile(profileData: FormData) {
+export const handleUpdateProfile = async (profileData: FormData) => {
   try {
     const result = await updateProfile(profileData);
-    if (result.success) {
-      // Re-save the updated user object (including new role or profile pic) to cookies
-      await setUserData(result.data);
 
-      // Revalidate to show new data on the UI
-      revalidatePath("/user/profile");
-      revalidatePath("/admin/dashboard");
-
+    if (!result?.success) {
       return {
-        success: true,
-        message: "Profile updated successfully",
-        data: result.data,
+        success: false,
+        message: result?.message ?? "Profile update failed",
       };
     }
+
+    await setUserData(result.data);
+
+    revalidatePath("/user/profile");
+    revalidatePath("/admin/dashboard");
+
     return {
-      success: false,
-      message: result.message || "Failed to update profile",
+      success: true,
+      data: result.data,
     };
   } catch (error: any) {
-    return { success: false, message: error.message };
+    console.error("UPDATE_PROFILE_ACTION_ERROR:", error);
+    return {
+      success: false,
+      message: error.message ?? "Unexpected error",
+    };
   }
-}
+};

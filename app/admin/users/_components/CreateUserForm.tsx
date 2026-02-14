@@ -23,7 +23,6 @@ export default function CreateUser() {
 
   const [formData, setFormData] = useState({
     fullName: "",
-    username: "",
     email: "",
     password: "",
     phone: "",
@@ -77,19 +76,18 @@ export default function CreateUser() {
 
     const data = new FormData();
 
-    // Loop through state and append to FormData
     Object.entries(formData).forEach(([key, value]) => {
       if (key === "preferredCulture" && Array.isArray(value)) {
-        // Append each item individually so Multer/Zod treats it as an array
         value.forEach((item) => data.append("preferredCulture", item));
       } else {
         data.append(key, String(value));
       }
     });
 
-    // if (file) {
-    //   data.append("profilePicture", file);
-    // }
+    // ✅ THIS MUST EXIST
+    if (file) {
+      data.append("profilePicture", file);
+    }
 
     try {
       const response = await axios.post(
@@ -101,13 +99,13 @@ export default function CreateUser() {
       if (response.data.success) {
         toast.success("Identity Authorized Successfully!");
         router.push("/admin/users");
-        router.refresh(); // Ensure the user list updates
+        router.refresh();
       }
     } catch (err: any) {
       console.error("Upload Error:", err);
-      const errorMessage =
-        err.response?.data?.message || "Auth Failed: Check server logs.";
-      toast.error(errorMessage);
+      toast.error(
+        err.response?.data?.message || "Auth Failed: Check server logs.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -124,7 +122,7 @@ export default function CreateUser() {
         {/* Left: Profile & Access */}
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-white p-6 rounded-3xl border-2 border-slate-100 shadow-xl flex flex-col items-center">
-            <div className="relative group w-full aspect-square max-w-[240px]">
+            <div className="relative group w-full aspect-square max-w-240px">
               <div className="w-full h-full rounded-[2.5rem] bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden flex items-center justify-center">
                 {preview ? (
                   <img
@@ -175,13 +173,7 @@ export default function CreateUser() {
                 onChange={handleInputChange}
                 required
               />
-              <AdminInput
-                label="Username"
-                name="username"
-                value={formData.username}
-                onChange={handleInputChange}
-                required
-              />
+
               <AdminInput
                 label="Email Address"
                 name="email"
@@ -249,7 +241,7 @@ export default function CreateUser() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-5 bg-black text-[#D4FF33] rounded-[2rem] font-black uppercase italic tracking-[0.2em] shadow-2xl hover:bg-[#D32F2F] hover:text-white transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+            className="w-full py-5 bg-black text-[#D4FF33] rounded-2rem font-black uppercase italic tracking-[0.2em] shadow-2xl hover:bg-[#D32F2F] hover:text-white transition-all flex items-center justify-center gap-3 disabled:opacity-50"
           >
             {isSubmitting ? (
               <Loader2 className="animate-spin" size={20} />
@@ -271,7 +263,7 @@ const AdminInput = ({ label, ...props }: any) => (
     <label className="text-[10px] font-black uppercase text-slate-500 ml-1">
       {label}
     </label>
-    <div className="bg-slate-50 rounded-xl flex items-center px-4 h-[52px] border-2 border-transparent focus-within:border-[#D32F2F] transition-all">
+    <div className="bg-slate-50 rounded-xl flex items-center px-4 h-52px border-2 border-transparent focus-within:border-[#D32F2F] transition-all">
       <input
         {...props}
         className="w-full bg-transparent text-black text-xs font-black focus:outline-none"
