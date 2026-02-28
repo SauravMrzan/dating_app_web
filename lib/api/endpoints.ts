@@ -1,5 +1,3 @@
-// List of API endpoints used in the application
-
 export const API = {
   AUTH: {
     LOGIN: "/api/auth/login",
@@ -14,5 +12,22 @@ export const API = {
     USER: {
       CREATE: "/api/admin/users",
     },
+  },
+
+  MATCH: {
+    DISCOVERY: "/api/match/discovery",
+    MATCHES: "/api/match/matches",
+    SWIPE: "/api/match/swipe",
+  },
+
+  CHAT: {
+    BASE: "/api/chat", // ✅ added base path
+    SEND: "/api/chat/send", // ✅ send message
+    MESSAGES: (conversationId: string) => `/api/chat/${conversationId}`, // ✅ fetch messages by conversationId
+  },
+
+  USER: {
+    BY_ID: (userId: string) => `/api/user/${userId}`, // ✅ fetch user by ID
+    ALL: "/api/user", // optional: list all users
   },
 };

@@ -1,217 +1,168 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
-import {
-  Settings,
-  MessageCircle,
-  User as UserIcon,
-  Heart,
-  RotateCcw,
-  X,
-  Star,
-  Zap,
-  MapPin,
-  Info,
-  CheckCircle2,
-  Sun,
-  Moon,
-  Loader2,
-} from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState } from "react";
+import axios from "@/lib/api/axios";
+import Link from "next/link";
+import { API } from "@/lib/api/endpoints"; // centralized endpoints
 
-// Your specific logo path
-import myLogo from "../../../public/images/logoright.png";
-
-export default function DatingDashboard() {
-  const { user, loading, logout } = useAuth();
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const [mounted, setMounted] = useState(false);
-  const router = useRouter();
+export default function DashboardPage() {
+  const [user, setUser] = useState<any>(null);
+  const [stats, setStats] = useState({ matches: 0, messages: 0, views: 0 });
 
   useEffect(() => {
-    setMounted(true);
-    const savedTheme = localStorage.getItem("dating-theme") as "light" | "dark";
-    if (savedTheme) setTheme(savedTheme);
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get(API.AUTH.WHOAMI);
+        setUser(res.data.data);
+
+        // Placeholder stats - in a real app, fetch from backend
+        setStats({ matches: 12, messages: 5, views: 124 });
+      } catch (err) {
+        console.error("Failed to load user", err);
+      }
+    };
+    fetchUser();
   }, []);
 
-  // Client-side protection
-  useEffect(() => {
-    if (mounted && !loading && !user) {
-      router.replace("/login");
-    }
-  }, [user, loading, mounted, router]);
-
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    localStorage.setItem("dating-theme", newTheme);
-  };
-
-  if (!mounted || loading) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-[#111418]">
-        <Loader2 className="text-[#FF447C] animate-spin" size={40} />
-      </div>
-    );
-  }
+  const cards = [
+    {
+      title: "Discover",
+      desc: "Find new sparks nearby",
+      icon: "🔥",
+      link: "/dashboard/discover",
+      color: "bg-rose-500",
+    },
+    {
+      title: "Chat Hub",
+      desc: "Jump back into conversations",
+      icon: "💬",
+      link: "/dashboard/chat", // ✅ UI route only
+      color: "bg-orange-500",
+    },
+    {
+      title: "Matches",
+      desc: "View your mutual connections",
+      icon: "✨",
+      link: "/dashboard/matches",
+      color: "bg-blue-500",
+    },
+    {
+      title: "Settings",
+      desc: "Update your vibe & security",
+      icon: "⚙️",
+      link: "/dashboard/settings",
+      color: "bg-gray-800",
+    },
+  ];
 
   return (
-    <div
-      className={`h-screen w-full flex overflow-hidden transition-colors duration-500 ${
-        theme === "dark" ? "bg-[#111418] text-white" : "bg-[#F0F2F5] text-slate-900"
-      }`}
-    >
-      {/* --- DESKTOP SIDEBAR --- */}
-      <aside
-        className={`hidden lg:flex flex-col w-[380px] border-r transition-colors ${
-          theme === "dark" ? "bg-[#1A1D23] border-white/5" : "bg-white border-slate-200"
-        }`}
-      >
-        {/* HEADER: Logo and Settings on the same horizon */}
-        <div className="p-6 flex items-center justify-between border-b border-white/5 min-h-[90px]">
-          <div className="flex items-center">
-            <Image
-              src={myLogo}
-              alt="App Logo"
-              width={150}
-              height={50}
-              className="object-contain"
-              priority
-            />
-          </div>
-          <button 
-            onClick={toggleTheme}
-            className="p-2 rounded-full hover:bg-white/5 transition-all opacity-60 hover:opacity-100"
+    <div className="min-h-screen bg-[#F9FAFB] p-6 lg:p-10">
+      {/* Welcome Header */}
+      <header className="mb-10">
+        <p className="text-[10px] font-black uppercase tracking-[3px] text-rose-500 mb-2">
+          Dashboard Overview
+        </p>
+        <h1 className="text-5xl font-black italic tracking-tighter text-black uppercase">
+          Yo, {user?.fullName?.split(" ")[0] || "Explorer"}!
+        </h1>
+        <p className="text-gray-400 font-medium mt-2">
+          Ready for some activity-based learning today?
+        </p>
+      </header>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-3 gap-4 mb-10">
+        {[
+          { label: "Matches", val: stats.matches },
+          { label: "Messages", val: stats.messages },
+          { label: "Profile Views", val: stats.views },
+        ].map((stat, i) => (
+          <div
+            key={i}
+            className="bg-white p-5 rounded-4xl shadow-sm border border-gray-100"
           >
-            <Settings size={22} />
-          </button>
-        </div>
-
-        {/* Sidebar Content */}
-        <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
-          <div className="flex gap-4 mb-8">
-            <button className="flex-1 py-2.5 rounded-full bg-[#FF447C] text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#FF447C]/20">
-              Matches
-            </button>
-            <button className={`flex-1 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors ${
-              theme === 'dark' ? 'bg-white/5 text-gray-400' : 'bg-slate-100 text-slate-500'
-            }`}>
-              Messages
-            </button>
+            <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">
+              {stat.label}
+            </p>
+            <p className="text-2xl font-black text-black mt-1">{stat.val}</p>
           </div>
+        ))}
+      </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+      {/* Action Grid */}
+      <h3 className="text-[10px] font-black uppercase tracking-[2px] text-gray-400 mb-6 px-2">
+        Quick Actions
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {cards.map((card, i) => (
+          <Link key={i} href={card.link}>
+            <div className="group relative bg-white p-8 rounded-[40px] shadow-xl shadow-gray-200/50 border border-transparent hover:border-rose-100 transition-all hover:-translate-y-1 overflow-hidden">
+              <div className="flex justify-between items-start relative z-10">
+                <div>
+                  <div
+                    className={`w-12 h-12 ${card.color} text-white rounded-2xl flex items-center justify-center text-2xl mb-4 shadow-lg shadow-inherit`}
+                  >
+                    {card.icon}
+                  </div>
+                  <h2 className="text-2xl font-black text-black mb-1">
+                    {card.title}
+                  </h2>
+                  <p className="text-gray-400 text-sm font-medium">
+                    {card.desc}
+                  </p>
+                </div>
+                <div className="text-gray-200 group-hover:text-rose-500 transition-colors">
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="3"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Subtle decorative background circle */}
+              <div
+                className={`absolute -right-10 -bottom-10 w-40 h-40 ${card.color} opacity-[0.03] rounded-full`}
+              />
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Course Progress / Tip Section */}
+      <div className="mt-12 p-8 bg-black rounded-[40px] text-white flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <h4 className="text-xl font-black italic uppercase">
+            Project Progress
+          </h4>
+          <p className="text-gray-400 text-sm font-medium mt-1">
+            Complete at least 3 projects to graduate the course.
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex -space-x-3">
+            {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className={`aspect-[3/4] rounded-2xl border relative overflow-hidden group cursor-pointer transition-all ${
-                  theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'
-                }`}
+                className="w-10 h-10 rounded-full border-4 border-black bg-rose-500 flex items-center justify-center font-black text-xs"
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                {i}
               </div>
             ))}
           </div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-rose-500">
+            0/3 Done
+          </p>
         </div>
-
-        {/* User Mini-Profile/Logout Section */}
-        <div className="p-6 border-t border-white/5 flex items-center justify-between">
-           <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#FF447C] to-[#5D44F8] p-[2px]">
-                 <div className="w-full h-full rounded-full bg-[#1A1D23] flex items-center justify-center overflow-hidden">
-                    <UserIcon size={20} className="text-gray-400" />
-                 </div>
-              </div>
-              <p className="text-xs font-bold truncate max-w-[120px]">{user?.fullName || "My Profile"}</p>
-           </div>
-           <button onClick={logout} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
-              <LogOut size={18} />
-           </button>
-        </div>
-      </aside>
-
-      {/* --- MAIN SWIPING AREA --- */}
-      <main className="flex-1 relative flex flex-col items-center justify-center p-6 bg-transparent">
-        
-        {/* Mobile Header with Logo */}
-        <div className="absolute top-6 left-6 right-6 flex justify-between items-center lg:hidden z-50">
-          <Image src={myLogo} alt="Logo" width={100} height={40} className="object-contain" />
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10"
-          >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-        </div>
-
-        {/* Tinder-Style Card */}
-        <motion.div
-          whileHover={{ scale: 1.01 }}
-          className={`relative w-full max-w-[420px] aspect-[2/3] rounded-[40px] overflow-hidden shadow-2xl border transition-colors ${
-            theme === "dark" ? "bg-[#24272D] border-white/10 shadow-black/50" : "bg-white border-slate-200 shadow-slate-300"
-          }`}
-        >
-          {/* Card Visual Content */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10" />
-          <div className="absolute inset-0 bg-slate-800 flex items-center justify-center">
-             <UserIcon size={80} className="text-white/10" />
-          </div>
-
-          <div className="absolute bottom-0 left-0 right-0 p-10 z-20">
-            <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-4xl font-extrabold tracking-tighter">Jessica</h2>
-              <span className="text-3xl font-light opacity-80 italic">22</span>
-              <CheckCircle2 size={24} className="text-blue-400" />
-            </div>
-            <p className="text-sm opacity-70 flex items-center gap-2 mb-8 font-semibold tracking-wide">
-              <MapPin size={16} className="text-[#FF447C]" /> 5 MILES AWAY
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {["TRAVEL", "SUSHI", "NETFLIX"].map((t) => (
-                <span
-                  key={t}
-                  className="px-5 py-2 rounded-full bg-white/10 backdrop-blur-xl text-[9px] font-black tracking-[0.15em] border border-white/10"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-          
-          <button className="absolute top-8 right-8 z-20 w-11 h-11 rounded-full bg-black/30 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:scale-110 transition-transform">
-            <Info size={22} />
-          </button>
-        </motion.div>
-
-        {/* Tinder Action Buttons */}
-        <div className="mt-10 flex items-center gap-4">
-          <CircleBtn icon={RotateCcw} color="text-yellow-500" size="sm" />
-          <CircleBtn icon={X} color="text-red-500" size="lg" />
-          <CircleBtn icon={Star} color="text-blue-400" size="sm" />
-          <CircleBtn icon={Heart} color="text-[#00FFA3]" size="lg" />
-          <CircleBtn icon={Zap} color="text-purple-500" size="sm" />
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
-
-// Reusable Action Button Component
-function CircleBtn({ icon: Icon, color, size }: any) {
-  const s = size === "lg" ? "w-16 h-16" : "w-12 h-12";
-  return (
-    <motion.button
-      whileHover={{ scale: 1.15 }}
-      whileTap={{ scale: 0.85 }}
-      className={`${s} rounded-full bg-[#1A1D23] border border-white/5 flex items-center justify-center shadow-xl ${color} hover:border-white/20 transition-colors z-20`}
-    >
-      <Icon size={size === "lg" ? 30 : 20} strokeWidth={size === 'lg' ? 3 : 2.5} />
-    </motion.button>
-  );
-}
-
-// Added missing Icon import
-import { LogOut } from 'lucide-react';

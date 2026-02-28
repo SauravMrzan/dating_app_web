@@ -150,15 +150,44 @@ export default function RegisterForm() {
           ))}
         </SelectField>
 
-        <SelectField
-          error={errors.interestedIn?.message}
-          {...register("interestedIn")}
-        >
-          <option value="">Interested In</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Everyone">Everyone</option>
-        </SelectField>
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-slate-700">Interested In</p>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 text-xs">
+              <input
+                type="radio"
+                value="Male"
+                {...register("interestedIn", {
+                  required: "Interested In is required",
+                })}
+              />
+              Male
+            </label>
+            <label className="flex items-center gap-2 text-xs">
+              <input
+                type="radio"
+                value="Female"
+                {...register("interestedIn", {
+                  required: "Interested In is required",
+                })}
+              />
+              Female
+            </label>
+            <label className="flex items-center gap-2 text-xs">
+              <input
+                type="radio"
+                value="Everyone"
+                {...register("interestedIn", {
+                  required: "Interested In is required",
+                })}
+              />
+              Everyone
+            </label>
+          </div>
+          {errors.interestedIn && (
+            <ErrorText msg={errors.interestedIn.message} />
+          )}
+        </div>
 
         {/* Preferred Culture Checkboxes */}
         <div className="pt-2 space-y-2">
