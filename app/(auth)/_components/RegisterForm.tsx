@@ -19,8 +19,7 @@ import {
 } from "lucide-react";
 import { handleRegister } from "@/lib/actions/auth-action";
 import { toast } from "react-hot-toast";
-
-const CULTURES = ["Brahmin", "Chhetri", "Newar", "Rai", "Magar", "Gurung"];
+import { useAuthOptions } from "@/lib/hooks/useAuthOptions";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -28,6 +27,7 @@ export default function RegisterForm() {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { options } = useAuthOptions();
 
   const {
     register,
@@ -129,9 +129,11 @@ export default function RegisterForm() {
 
         <SelectField error={errors.gender?.message} {...register("gender")}>
           <option value="">Select Gender</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
+          {options.genders.map((gender) => (
+            <option key={gender} value={gender}>
+              {gender}
+            </option>
+          ))}
         </SelectField>
 
         <InputField
@@ -143,7 +145,7 @@ export default function RegisterForm() {
 
         <SelectField error={errors.culture?.message} {...register("culture")}>
           <option value="">Your Culture</option>
-          {CULTURES.map((c) => (
+          {options.cultures.map((c) => (
             <option key={c} value={c}>
               {c}
             </option>
@@ -153,36 +155,18 @@ export default function RegisterForm() {
         <div className="space-y-2">
           <p className="text-xs font-semibold text-slate-700">Interested In</p>
           <div className="flex gap-4">
-            <label className="flex items-center gap-2 text-xs">
-              <input
-                type="radio"
-                value="Male"
-                {...register("interestedIn", {
-                  required: "Interested In is required",
-                })}
-              />
-              Male
-            </label>
-            <label className="flex items-center gap-2 text-xs">
-              <input
-                type="radio"
-                value="Female"
-                {...register("interestedIn", {
-                  required: "Interested In is required",
-                })}
-              />
-              Female
-            </label>
-            <label className="flex items-center gap-2 text-xs">
-              <input
-                type="radio"
-                value="Everyone"
-                {...register("interestedIn", {
-                  required: "Interested In is required",
-                })}
-              />
-              Everyone
-            </label>
+            {options.interestedIn.map((option) => (
+              <label key={option} className="flex items-center gap-2 text-xs">
+                <input
+                  type="radio"
+                  value={option}
+                  {...register("interestedIn", {
+                    required: "Interested In is required",
+                  })}
+                />
+                {option}
+              </label>
+            ))}
           </div>
           {errors.interestedIn && (
             <ErrorText msg={errors.interestedIn.message} />
@@ -195,7 +179,7 @@ export default function RegisterForm() {
             Preferred Culture(s)
           </p>
           <div className="grid grid-cols-2 gap-2">
-            {CULTURES.map((c) => (
+            {options.cultures.map((c) => (
               <label key={c} className="flex items-center gap-2 text-xs">
                 <input
                   type="checkbox"

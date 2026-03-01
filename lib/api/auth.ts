@@ -45,6 +45,20 @@ export const whoAmi = async () => {
 };
 
 /**
+ * AUTH OPTIONS
+ * GET /api/auth/options
+ */
+export const getAuthOptions = async () => {
+  try {
+    const response = await axios.get(API.AUTH.OPTIONS);
+    return response.data;
+  } catch (error: any) {
+    console.error("AUTH_OPTIONS_API_ERROR:", error);
+    throw new Error(error?.response?.data?.message || "Failed to fetch auth options");
+  }
+};
+
+/**
  * UPDATE PROFILE
  * PUT /api/auth/update-profile
  * Supports Multer (profile picture upload)

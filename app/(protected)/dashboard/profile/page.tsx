@@ -19,9 +19,43 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getImageUrl } from "@/lib/utils/image";
+import { useAuthOptions } from "@/lib/hooks/useAuthOptions";
+
+const parseArrayLike = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => String(item).trim())
+      .filter(Boolean);
+  }
+
+  if (typeof value !== "string") return [];
+
+  const trimmed = value.trim();
+  if (!trimmed) return [];
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) {
+      return parsed.map((item) => String(item).trim()).filter(Boolean);
+    }
+    return [String(parsed).trim()].filter(Boolean);
+  } catch {}
+
+  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+    const inner = trimmed.slice(1, -1).trim();
+    if (!inner) return [];
+    return inner
+      .split(",")
+      .map((item) => item.trim().replace(/^['\"]|['\"]$/g, ""))
+      .filter(Boolean);
+  }
+
+  return [trimmed];
+};
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { options } = useAuthOptions();
   const [user, setUser] = useState<any>(null);
   const [formData, setFormData] = useState<any>({
     fullName: "",
@@ -54,6 +88,11 @@ export default function ProfilePage() {
       try {
         const res = await axios.get("/api/auth/whoami");
         const userData = res.data.data;
+        const normalizedCulture = parseArrayLike(userData.culture)[0] || "";
+        const normalizedPreferredCulture = parseArrayLike(
+          userData.preferredCulture,
+        );
+
         setUser(userData);
         setFormData({
           fullName: userData.fullName || "",
@@ -61,9 +100,9 @@ export default function ProfilePage() {
           phone: userData.phone || "",
           gender: userData.gender || "",
           dateOfBirth: userData.dateOfBirth?.slice(0, 10) || "",
-          culture: userData.culture || "",
+          culture: normalizedCulture,
           interestedIn: userData.interestedIn || "",
-          preferredCulture: userData.preferredCulture || [],
+          preferredCulture: normalizedPreferredCulture,
           minPreferredAge: userData.minPreferredAge || 18,
           maxPreferredAge: userData.maxPreferredAge || 99,
           bio: userData.bio || "",
@@ -134,12 +173,35 @@ export default function ProfilePage() {
       Object.keys(formData).forEach((key) => {
         if (key === "photos") return;
         const value = formData[key];
+
+        if (value === undefined || value === null) return;
+
+        if (key === "culture" && Array.isArray(value)) {
+          if (value[0]) {
+            data.append(key, value[0]);
+          }
+          return;
+        }
+
+        if (typeof value === "string" && value.trim() === "") {
+          return;
+        }
+
         if (Array.isArray(value)) {
+          // if (key === "preferredCulture") {
+          //   value
+          //     .filter((item) => typeof item === "string" && item.trim() !== "")
+          //     .forEach((item) => data.append(key, item));
+          //   return;
+          // }
+
           data.append(key, JSON.stringify(value));
-        } else if (value !== undefined && value !== null) {
+        } else {
           data.append(key, value);
         }
       });
+
+      console.log(data, 'ddd')
 
       await axios.put("/api/auth/update-profile", data, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -291,9 +353,9 @@ export default function ProfilePage() {
                       </label>
                       <select name="gender" value={formData.gender} onChange={handleChange} className="input-modern">
                         <option value="">Select</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
+                        {options.genders.map((gender) => (
+                          <option key={gender} value={gender}>{gender}</option>
+                        ))}
                       </select>
                     </div>
                     <div className="space-y-2">
@@ -302,7 +364,7 @@ export default function ProfilePage() {
                       </label>
                       <select name="culture" value={formData.culture} onChange={handleChange} className="input-modern">
                         <option value="">Select</option>
-                        {["Brahmin", "Chhetri", "Newar", "Rai", "Magar", "Gurung"].map((c) => (
+                        {options.cultures.map((c) => (
                           <option key={c} value={c}>{c}</option>
                         ))}
                       </select>
@@ -324,9 +386,9 @@ export default function ProfilePage() {
                     </label>
                     <select name="interestedIn" value={formData.interestedIn} onChange={handleChange} className="input-modern">
                       <option value="">Select</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Everyone">Everyone</option>
+                      {options.interestedIn.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -347,7 +409,7 @@ export default function ProfilePage() {
                   <div className="space-y-4">
                     <label className="text-xs font-black uppercase text-[var(--text-secondary)]">Preferred Culture</label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {["Brahmin", "Chhetri", "Newar", "Rai", "Magar", "Gurung"].map((c) => (
+                      {options.cultures.map((c) => (
                         <button
                           key={c}
                           type="button"

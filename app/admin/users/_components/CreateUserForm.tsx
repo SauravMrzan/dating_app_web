@@ -12,11 +12,11 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-
-const CULTURES = ["Brahmin", "Chhetri", "Newar", "Rai", "Magar", "Gurung"];
+import { useAuthOptions } from "@/lib/hooks/useAuthOptions";
 
 export default function CreateUser() {
   const router = useRouter();
+  const { options } = useAuthOptions();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -227,7 +227,7 @@ export default function CreateUser() {
                 required
               >
                 <option value="">Select</option>
-                {CULTURES.map((c) => (
+                {options.cultures.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>

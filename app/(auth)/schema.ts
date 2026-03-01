@@ -18,16 +18,12 @@ export const registerSchema = z.object({
   // Coerce date string -> Date
   dateOfBirth: z.string().optional(),
 
-  culture: z
-    .enum(["Brahmin", "Chhetri", "Newar", "Rai", "Magar", "Gurung"])
-    .optional(),
+  culture: z.string().optional(),
 
   // Preferences
   interestedIn: z.enum(["Male", "Female", "Everyone"]).optional(),
 
-  preferredCulture: z
-    .array(z.enum(["Brahmin", "Chhetri", "Newar", "Rai", "Magar", "Gurung"]))
-    .optional(),
+  preferredCulture: z.array(z.string()).optional(),
 
   // Coerce string -> number safely
   minPreferredAge: z.number().int().positive().optional(),

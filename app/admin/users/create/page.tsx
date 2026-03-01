@@ -19,11 +19,11 @@ import {
   Phone,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
-
-const CULTURES = ["Brahmin", "Chhetri", "Newar", "Rai", "Magar", "Gurung"];
+import { useAuthOptions } from "@/lib/hooks/useAuthOptions";
 
 export default function CreateUserPage() {
   const router = useRouter();
+  const { options } = useAuthOptions();
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -189,7 +189,7 @@ export default function CreateUserPage() {
               />
               <SelectField label="Native Culture" name="culture" icon={Globe}>
                 <option value="">Select Culture</option>
-                {CULTURES.map((c) => (
+                {options.cultures.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>
@@ -243,7 +243,7 @@ export default function CreateUserPage() {
                 Preferred Peer Cultures
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-5 bg-slate-50 rounded-2xl border border-slate-200">
-                {CULTURES.map((c) => (
+                {options.cultures.map((c) => (
                   <label
                     key={c}
                     className="flex items-center gap-3 text-xs font-black text-black cursor-pointer hover:text-[#D32F2F] transition-colors"
