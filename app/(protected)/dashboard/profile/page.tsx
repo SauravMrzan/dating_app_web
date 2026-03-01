@@ -3,6 +3,21 @@
 import { useEffect, useState } from "react";
 import axios from "@/lib/api/axios";
 import { useRouter } from "next/navigation";
+import {
+  Camera,
+  User,
+  Target,
+  Info,
+  Save,
+  Calendar,
+  MapPin,
+  ChevronRight,
+  Heart,
+  Briefcase,
+  GraduationCap,
+  Sparkles
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -31,6 +46,7 @@ export default function ProfilePage() {
   const [message, setMessage] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [previewPhotos, setPreviewPhotos] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<"basics" | "discovery" | "about">("basics");
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -87,9 +103,9 @@ export default function ProfilePage() {
       const selected = prev.preferredCulture || [];
       return selected.includes(culture)
         ? {
-            ...prev,
-            preferredCulture: selected.filter((c: string) => c !== culture),
-          }
+          ...prev,
+          preferredCulture: selected.filter((c: string) => c !== culture),
+        }
         : { ...prev, preferredCulture: [...selected, culture] };
     });
   };
@@ -145,347 +161,280 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center text-black font-black uppercase">
-        Loading your vibe...
+      <div className="flex h-[80vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full"
+          />
+          <p className="font-bold text-rose-500 animate-pulse">Setting up your profile...</p>
+        </div>
       </div>
     );
   }
 
-  const labelStyle =
-    "block text-[10px] font-black uppercase tracking-[2px] text-gray-400 mb-1";
-  const inputStyle =
-    "w-full border-b-2 border-gray-100 py-2 text-black bg-transparent focus:border-rose-500 outline-none transition-all font-semibold text-lg";
+  const SectionTitle = ({ icon: Icon, title, subtitle }: any) => (
+    <div className="flex items-center gap-4 mb-8">
+      <div className="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500">
+        <Icon className="w-6 h-6" />
+      </div>
+      <div>
+        <h3 className="text-xl font-black text-[var(--text-main)] leading-none mb-1">{title}</h3>
+        <p className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-widest">{subtitle}</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] py-8 px-4 font-sans">
-      <div className="max-w-xl mx-auto bg-white shadow-[0_20px_60px_rgba(0,0,0,0.08)] rounded-[48px] overflow-hidden">
-        {/* Header */}
-        <div className="bg-linear-to-br from-rose-500 via-rose-400 to-orange-400 p-10 text-white">
-          <h2 className="text-4xl font-black italic tracking-tighter">
-            Edit Profile
-          </h2>
-          <p className="text-xs font-bold opacity-80 uppercase tracking-widest mt-1">
-            Dating App Vibes
+    <div className="max-w-2xl mx-auto">
+      {/* Hero Header */}
+      <div className="relative mb-8 text-center pt-4">
+        <h1 className="text-4xl font-black text-gradient italic mb-2">Edit My Profile</h1>
+        <p className="text-[var(--text-secondary)] font-medium">Fine-tune your vibe and find your spark.</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Photo Section */}
+        <section className="card-premium p-6">
+          <SectionTitle icon={Camera} title="Your Photos" subtitle="Showcase your best self" />
+          <div className="grid grid-cols-3 gap-4">
+            <label className="aspect-[3/4] bg-[var(--bg-secondary)] border-2 border-dashed border-[var(--border-color)] rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-rose-500/5 transition-all group overflow-hidden relative">
+              <Camera className="w-8 h-8 text-[var(--text-secondary)] group-hover:text-rose-500 transition-colors" />
+              <span className="text-[10px] font-black uppercase mt-2 text-[var(--text-secondary)] group-hover:text-rose-500 transition-colors">Add Photo</span>
+              <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
+            </label>
+
+            <AnimatePresence>
+              {previewPhotos.map((src, idx) => (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  key={`preview-${idx}`}
+                  className="aspect-[3/4] rounded-3xl overflow-hidden relative border-2 border-rose-500 shadow-lg shadow-rose-500/20"
+                >
+                  <img src={src} className="w-full h-full object-cover" alt="preview" />
+                  <div className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-1 shadow-md">
+                    <Sparkles className="w-3 h-3" />
+                  </div>
+                </motion.div>
+              ))}
+              {previewPhotos.length === 0 && user?.photos?.map((photo: string, idx: number) => (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  key={`saved-${idx}`}
+                  className="aspect-[3/4] rounded-3xl overflow-hidden relative group"
+                >
+                  <img src={`/${photo}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="saved" />
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+          <p className="text-[10px] text-[var(--text-secondary)] mt-4 font-bold text-center uppercase tracking-wider">
+            Add up to 3 high-quality photos for better match rates
           </p>
+        </section>
+
+        {/* Form Content */}
+        <div className="card-premium overflow-hidden">
+          {/* Tabs */}
+          <div className="flex border-b border-[var(--border-color)]">
+            {[
+              { id: "basics", icon: User, label: "Basics" },
+              { id: "discovery", icon: Target, label: "Discovery" },
+              { id: "about", icon: Info, label: "About" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-black uppercase tracking-tighter transition-all relative ${activeTab === tab.id ? "text-rose-500" : "text-[var(--text-secondary)]"
+                  }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                {activeTab === tab.id && (
+                  <motion.div layoutId="profile-tab" className="absolute bottom-0 left-0 right-0 h-1 bg-rose-500" />
+                )}
+              </button>
+            ))}
+          </div>
+
+          <div className="p-8">
+            <AnimatePresence mode="wait">
+              {activeTab === "basics" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-6"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase text-[var(--text-secondary)] flex items-center gap-2">
+                        <User className="w-3 h-3" /> Full Name
+                      </label>
+                      <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="input-modern" required />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase text-[var(--text-secondary)] flex items-center gap-2">
+                        <Calendar className="w-3 h-3" /> Birthday
+                      </label>
+                      <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} className="input-modern" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase text-[var(--text-secondary)] flex items-center gap-2">
+                        <Sparkles className="w-3 h-3" /> Gender
+                      </label>
+                      <select name="gender" value={formData.gender} onChange={handleChange} className="input-modern">
+                        <option value="">Select</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase text-[var(--text-secondary)] flex items-center gap-2">
+                        <MapPin className="w-3 h-3" /> Culture
+                      </label>
+                      <select name="culture" value={formData.culture} onChange={handleChange} className="input-modern">
+                        <option value="">Select</option>
+                        {["Brahmin", "Chhetri", "Newar", "Rai", "Magar", "Gurung"].map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === "discovery" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-8"
+                >
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase text-[var(--text-secondary)] flex items-center gap-2">
+                      <Heart className="w-3 h-3" /> Interested In
+                    </label>
+                    <select name="interestedIn" value={formData.interestedIn} onChange={handleChange} className="input-modern">
+                      <option value="">Select</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Everyone">Everyone</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-xs font-black uppercase text-[var(--text-secondary)]">Age Preference</label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase">Min Age: {formData.minPreferredAge}</span>
+                        <input type="range" min="18" max="99" name="minPreferredAge" value={formData.minPreferredAge} onChange={handleChange} className="w-full accent-rose-500" />
+                      </div>
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase">Max Age: {formData.maxPreferredAge}</span>
+                        <input type="range" min="18" max="99" name="maxPreferredAge" value={formData.maxPreferredAge} onChange={handleChange} className="w-full accent-rose-500" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-xs font-black uppercase text-[var(--text-secondary)]">Preferred Culture</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {["Brahmin", "Chhetri", "Newar", "Rai", "Magar", "Gurung"].map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => handlePreferredCultureChange(c)}
+                          className={`py-3 px-4 rounded-2xl text-xs font-bold transition-all border-2 ${formData.preferredCulture.includes(c)
+                              ? "bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-500/20"
+                              : "bg-[var(--bg-secondary)] border-transparent text-[var(--text-secondary)] hover:border-rose-300"
+                            }`}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === "about" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-6"
+                >
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase text-[var(--text-secondary)]">Your Bio</label>
+                    <textarea name="bio" value={formData.bio} onChange={handleChange} className="input-modern min-h-[120px] resize-none" placeholder="Tell your story..." />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase text-[var(--text-secondary)]">Interests (Separated by comma)</label>
+                    <input type="text" name="interests" value={formData.interests.join(", ")} onChange={handleInterestsChange} className="input-modern" placeholder="Hiking, Music, Travel..." />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase text-[var(--text-secondary)] flex items-center gap-2">
+                        <GraduationCap className="w-3 h-3" /> Education
+                      </label>
+                      <input type="text" name="education" value={formData.education} onChange={handleChange} className="input-modern" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase text-[var(--text-secondary)] flex items-center gap-2">
+                        <Briefcase className="w-3 h-3" /> Zodiac
+                      </label>
+                      <select name="zodiac" value={formData.zodiac} onChange={handleChange} className="input-modern">
+                        <option value="">Select</option>
+                        {["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"].map((sign) => (
+                          <option key={sign} value={sign}>{sign}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-10">
-          {/* Error / Success */}
-          {(message || errors.length > 0) && (
-            <div
-              className={`p-4 rounded-3xl border ${message ? "bg-green-50 border-green-100 text-green-600" : "bg-rose-50 border-rose-100 text-rose-600"}`}
-            >
-              {message && (
-                <p className="text-center font-black text-sm">{message}</p>
-              )}
-              {errors.map((err, i) => (
-                <p
-                  key={i}
-                  className="text-center font-bold text-xs uppercase tracking-tight"
-                >
-                  ⚠️ {err}
-                </p>
-              ))}
-            </div>
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-4">
+          {message && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 bg-green-500/10 border border-green-500/20 text-green-500 rounded-2xl text-center font-bold text-sm">
+              Success! Profile updated.
+            </motion.div>
+          )}
+          {errors.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl text-center font-bold text-xs uppercase">
+              {errors[0]}
+            </motion.div>
           )}
 
-          {/* Photo Showcase */}
-          <section>
-            <span className={labelStyle}>Showcase (Max 3)</span>
-            <div className="flex flex-row gap-4 mt-4 overflow-x-auto pb-4 no-scrollbar">
-              <label className="shrink-0 w-32 h-48 bg-gray-50 border-2 border-dashed border-gray-200 rounded-[28px] flex flex-col items-center justify-center cursor-pointer hover:bg-rose-50 transition-all">
-                <span className="text-3xl text-gray-300 font-light">+</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
-              {previewPhotos.map((src, idx) => (
-                <img
-                  key={idx}
-                  src={src}
-                  className="shrink-0 w-32 h-48 rounded-[28px] object-cover border-4 border-rose-500 shadow-xl"
-                  alt="preview"
-                />
-              ))}
-              {previewPhotos.length === 0 &&
-                user?.photos?.map((photo: string, idx: number) => (
-                  <img
-                    key={idx}
-                    src={`/${photo}`}
-                    className="shrink-0 w-32 h-48 rounded-[28px] object-cover shadow-sm"
-                    alt="saved"
-                  />
-                ))}
-            </div>
-            <p className="text-[9px] text-gray-400 mt-2 font-bold text-center italic">
-              Optimal: 625px × 1080px
-            </p>
-          </section>
-
-          {/* Basics */}
-          <div className="space-y-6">
-            <h3 className="text-black font-black text-xs uppercase border-l-4 border-rose-500 pl-3 tracking-widest">
-              The Basics
-            </h3>
-            <div>
-              <label className={labelStyle}>Full Name</label>
-              <input
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                className={inputStyle}
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <label className={labelStyle}>Gender</label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  className={inputStyle}
-                >
-                  <option value="">Select</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelStyle}>Birthday</label>
-                <input
-                  type="date"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={handleChange}
-                  className={inputStyle}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <label className={labelStyle}>Phone Number</label>
-                <input
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className={inputStyle}
-                />
-              </div>
-              <div>
-                <label className={labelStyle}>Culture</label>
-                <select
-                  name="culture"
-                  value={formData.culture}
-                  onChange={handleChange}
-                  className={inputStyle}
-                >
-                  <option value="">Select</option>
-                  {[
-                    "Brahmin",
-                    "Chhetri",
-                    "Newar",
-                    "Rai",
-                    "Magar",
-                    "Gurung",
-                  ].map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Discovery Filters */}
-          <div className="bg-[#FFF5F7] p-8 rounded-[40px] space-y-6">
-            <h3 className="text-rose-500 font-black text-xs uppercase tracking-widest">
-              Discovery Filters
-            </h3>
-
-            {/* Preferred Gender */}
-            <div>
-              <label className={labelStyle}>Preferred Gender</label>
-              <select
-                name="interestedIn"
-                value={formData.interestedIn}
-                onChange={handleChange}
-                className={inputStyle}
-              >
-                <option value="">Select</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Everyone">Everyone</option>
-              </select>
-            </div>
-
-            {/* Preferred Age Range */}
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <label className={labelStyle}>Min Preferred Age</label>
-                <input
-                  type="number"
-                  name="minPreferredAge"
-                  value={formData.minPreferredAge}
-                  onChange={handleChange}
-                  className={inputStyle}
-                />
-              </div>
-              <div>
-                <label className={labelStyle}>Max Preferred Age</label>
-                <input
-                  type="number"
-                  name="maxPreferredAge"
-                  value={formData.maxPreferredAge}
-                  onChange={handleChange}
-                  className={inputStyle}
-                />
-              </div>
-            </div>
-
-            {/* Preferred Culture (Multiple Choice) */}
-            <div>
-              <label className={labelStyle}>Preferred Culture</label>
-              <div className="flex flex-wrap gap-4 mt-2">
-                {["Brahmin", "Chhetri", "Newar", "Rai", "Magar", "Gurung"].map(
-                  (c) => (
-                    <label key={c} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={formData.preferredCulture.includes(c)}
-                        onChange={() => handlePreferredCultureChange(c)}
-                        className="accent-rose-500"
-                      />
-                      <span className="text-sm font-semibold">{c}</span>
-                    </label>
-                  ),
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* More Details */}
-          <div className="space-y-6">
-            <h3 className="text-black font-black text-xs uppercase border-l-4 border-rose-500 pl-3 tracking-widest">
-              More About You
-            </h3>
-
-            <div>
-              <label className={labelStyle}>Bio</label>
-              <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={handleChange}
-                className={inputStyle}
-                rows={3}
-                placeholder="Tell others about yourself..."
-              />
-            </div>
-
-            <div>
-              <label className={labelStyle}>Interests (comma separated)</label>
-              <input
-                type="text"
-                name="interests"
-                value={formData.interests.join(", ")}
-                onChange={handleInterestsChange}
-                className={inputStyle}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <label className={labelStyle}>Height (cm)</label>
-                <input
-                  type="number"
-                  name="height"
-                  value={formData.height}
-                  onChange={handleChange}
-                  className={inputStyle}
-                />
-              </div>
-              <div>
-                <label className={labelStyle}>Zodiac</label>
-                <select
-                  name="zodiac"
-                  value={formData.zodiac}
-                  onChange={handleChange}
-                  className={inputStyle}
-                >
-                  <option value="">Select</option>
-                  {[
-                    "Aries",
-                    "Taurus",
-                    "Gemini",
-                    "Cancer",
-                    "Leo",
-                    "Virgo",
-                    "Libra",
-                    "Scorpio",
-                    "Sagittarius",
-                    "Capricorn",
-                    "Aquarius",
-                    "Pisces",
-                  ].map((sign) => (
-                    <option key={sign} value={sign}>
-                      {sign}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <label className={labelStyle}>Education</label>
-                <input
-                  type="text"
-                  name="education"
-                  value={formData.education}
-                  onChange={handleChange}
-                  className={inputStyle}
-                />
-              </div>
-              <div>
-                <label className={labelStyle}>Family Plan</label>
-                <select
-                  name="familyPlan"
-                  value={formData.familyPlan}
-                  onChange={handleChange}
-                  className={inputStyle}
-                >
-                  <option value="">Select</option>
-                  <option value="Want children">Want children</option>
-                  <option value="Don’t want children">
-                    Don’t want children
-                  </option>
-                  <option value="Open to either">Open to either</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Save Button */}
-          <div className="text-center">
-            <button
-              type="submit"
-              disabled={saving}
-              className="bg-rose-500 text-white px-8 py-3 rounded-full font-black uppercase tracking-widest hover:bg-rose-600 transition-all disabled:opacity-50"
-            >
-              {saving ? "Saving..." : "Save Changes"}
-            </button>
-          </div>
-        </form>
-      </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="btn-primary w-full flex items-center justify-center gap-3 py-4"
+          >
+            {saving ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                <span>Save Profile Changes</span>
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

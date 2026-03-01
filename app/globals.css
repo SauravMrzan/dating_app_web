@@ -1,44 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --color-secondary: #70f800;
-    --color-brand-dark: #050505;
+@theme {
+  /* Tinder Color Palette */
+  --color-primary: #ff4458;
+  --color-primary-dark: #e91e63;
+  --color-secondary: #ff7854;
+  --color-accent: #2db1ff;
+  --color-success: #17e390;
+  --color-warning: #f7a22d;
 
-    /* Animation Utilities */
-    --animate-float: float 6s ease-in-out infinite;
-    --animate-fade-in-up: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --font-main: 'Outfit', sans-serif;
+
+  /* Animation Tokens */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-subtle: pulseSubtle 2s ease-in-out infinite;
+
+  /* Theme-specific variables */
+  --bg-main: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --text-main: #111827;
+  --text-secondary: #6b7280;
+  --card-bg: #ffffff;
+  --nav-bg: rgba(255, 255, 255, 0.85);
+  --border-color: rgba(0, 0, 0, 0.05);
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+      transform: translateY(-10px) rotate(1deg);
+    }
+  }
+
+  @keyframes pulseSubtle {
+
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.8;
+      transform: scale(0.98);
+    }
   }
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(2deg); }
-}
-
-@keyframes fadeInUp {
-  0% { opacity: 0; transform: translateY(30px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-/* Base Styles & Resets */
+/* Base Styles */
 @layer base {
   :root {
-    color-scheme: dark;
-    /* Default Dark Theme Variables */
-    --bg-main: #050505;
-    --text-main: #ffffff;
-    --card-bg: #111111;
-    --nav-bg: rgba(0, 0, 0, 0.8);
-  }
-
-  /* Light Theme Overrides */
-  .light {
     color-scheme: light;
-    --bg-main: #f8fafc;
-    --text-main: #0f172a;
-    --card-bg: #ffffff;
-    --nav-bg: rgba(255, 255, 255, 0.8);
+  }
+
+  .dark {
+    color-scheme: dark;
+    --bg-main: #0f1014;
+    --bg-secondary: #1a1c23;
+    --text-main: #f9fafb;
+    --text-secondary: #9ca3af;
+    --card-bg: #1a1c23;
+    --nav-bg: rgba(15, 16, 20, 0.85);
+    --border-color: rgba(255, 255, 255, 0.05);
   }
 
   html {
@@ -48,71 +76,73 @@
   body {
     background-color: var(--bg-main);
     color: var(--text-main);
-    transition: background-color 0.5s ease, color 0.5s ease;
+    font-family: var(--font-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     margin: 0;
     padding: 0;
-    /* REMOVED: overflow: hidden, position: fixed, height: 100% */
   }
 
-  /* Fix for autofill placeholders */
-  input:-webkit-autofill {
-    -webkit-text-fill-color: #0f172a;
-    -webkit-box-shadow: 0 0 0px 1000px white inset;
-    transition: background-color 5000s ease-in-out 0s;
+  ::-webkit-scrollbar {
+    width: 6px;
   }
 
-  /* Custom Scrollbar */
-  ::-webkit-scrollbar { width: 8px; }
-  ::-webkit-scrollbar-track { background: #0a0a0a; }
-  ::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--color-secondary); }
-}
-
-@layer utilities {
-  .glass {
-    background-color: var(--nav-bg);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-}
-
-@layer components {
-  .input {
-    background-color: white;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-    height: 48px;
-    padding: 0 16px;
-
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .input input,
-  .input select {
+  ::-webkit-scrollbar-track {
     background: transparent;
-    border: none;
-    outline: none;
-    flex: 1;
-
-    /* 🔥 THIS IS THE KEY FIX */
-    color: #0f172a; /* slate-900 */
-    font-size: 12px;
-    font-weight: 600;
   }
 
-  .input input::placeholder {
-    color: #94a3b8; /* slate-400 */
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
   }
 
-  .input svg {
-    color: #64748b; /* slate-500 */
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
   }
 
-  .input:focus-within {
-    border-color: #c8344a;
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary);
   }
+}
+
+/* Custom Utilities using TW4 @utility */
+@utility glass {
+  background-color: var(--nav-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+}
+
+@utility text-gradient {
+  background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@utility bg-gradient-primary {
+  background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Premium Components */
+@utility btn-primary {
+  @apply bg-gradient-primary text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-rose-500/20 hover:shadow-rose-500/40 transform transition-all active:scale-95;
+}
+
+@utility card-premium {
+  @apply bg-[var(--card-bg)] rounded-[32px] border border-[var(--border-color)] shadow-xl shadow-black/5;
+}
+
+@utility input-modern {
+  @apply w-full bg-[var(--bg-secondary)] border-none rounded-2xl py-3 px-4 text-[var(--text-main)] focus:ring-2 focus:ring-[var(--color-primary)] outline-none transition-all placeholder:text-[var(--text-secondary)]/50 font-medium;
 }

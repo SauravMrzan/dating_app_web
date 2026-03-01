@@ -1,8 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "@/lib/api/axios";
 import Link from "next/link";
+import {
+  X,
+  Heart,
+  RotateCcw,
+  Star,
+  Info,
+  MapPin,
+  Sparkles,
+  Search,
+  Check
+} from "lucide-react";
+import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 
 const calculateAge = (dob: string) => {
   const birthDate = new Date(dob);
@@ -15,11 +27,106 @@ const calculateAge = (dob: string) => {
   return age;
 };
 
+const CardStack = ({ profiles, onSwipe }: { profiles: any[], onSwipe: (id: string, dir: "like" | "dislike") => void }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const x = useMotionValue(0);
+  const rotate = useTransform(x, [-200, 200], [-25, 25]);
+  const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0.5, 1, 1, 1, 0.5]);
+  const likeOpacity = useTransform(x, [50, 150], [0, 1]);
+  const nopeOpacity = useTransform(x, [-50, -150], [0, 1]);
+
+  const handleDragEnd = (event: any, info: any) => {
+    if (info.offset.x > 100) {
+      onSwipe(profiles[currentIndex]._id, "like");
+      setCurrentIndex(prev => prev + 1);
+    } else if (info.offset.x < -100) {
+      onSwipe(profiles[currentIndex]._id, "dislike");
+      setCurrentIndex(prev => prev + 1);
+    }
+  };
+
+  if (currentIndex >= profiles.length) return null;
+
+  return (
+    <div className="relative w-full aspect-[3/4.5] max-w-sm mx-auto">
+      <AnimatePresence>
+        {profiles.slice(currentIndex, currentIndex + 2).reverse().map((profile, index) => {
+          const isTop = index === (profiles.slice(currentIndex, currentIndex + 2).length - 1);
+
+          return (
+            <motion.div
+              key={profile._id}
+              style={isTop ? { x, rotate, opacity } : { scale: 0.95, y: 10, opacity: 0.5 }}
+              drag={isTop ? "x" : false}
+              dragConstraints={{ left: 0, right: 0 }}
+              onDragEnd={handleDragEnd}
+              className="absolute inset-0 cursor-grab active:cursor-grabbing"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: isTop ? 1 : 0.95, y: isTop ? 0 : 10, opacity: 1 }}
+              exit={{ x: x.get() > 0 ? 500 : -500, opacity: 0, transition: { duration: 0.3 } }}
+            >
+              <div className="relative w-full h-full rounded-[40px] overflow-hidden shadow-2xl border-4 border-white">
+                <img
+                  src={profile.photos?.[0] ? `${process.env.NEXT_PUBLIC_API_URL || ""}/${profile.photos[0]}` : "/default-avatar.png"}
+                  alt={profile.fullName}
+                  className="w-full h-full object-cover"
+                />
+
+                {/* Swipe Indicators */}
+                {isTop && (
+                  <>
+                    <motion.div style={{ opacity: likeOpacity }} className="absolute top-10 left-10 border-4 border-green-500 rounded-xl px-4 py-2 rotate-[-20deg] z-20">
+                      <span className="text-4xl font-black text-green-500 uppercase">LIKE</span>
+                    </motion.div>
+                    <motion.div style={{ opacity: nopeOpacity }} className="absolute top-10 right-10 border-4 border-rose-500 rounded-xl px-4 py-2 rotate-[20deg] z-20">
+                      <span className="text-4xl font-black text-rose-500 uppercase">NOPE</span>
+                    </motion.div>
+                  </>
+                )}
+
+                {/* Info Overlay */}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-8 pt-20">
+                  <div className="flex items-end justify-between gap-4">
+                    <div className="flex-1">
+                      <h3 className="text-3xl font-black text-white leading-tight">
+                        {profile.fullName}, {profile.age || (profile.dateOfBirth ? calculateAge(profile.dateOfBirth) : "N/A")}
+                      </h3>
+                      <div className="flex items-center gap-2 text-white/80 mt-1 font-bold text-sm">
+                        <MapPin className="w-4 h-4" />
+                        <span>{profile.culture || "Nearby"}</span>
+                      </div>
+                    </div>
+                    <button className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20">
+                      <Info className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {profile.interests?.slice(0, 3).map((interest: string) => (
+                      <span key={interest} className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-[10px] font-black uppercase text-white tracking-widest border border-white/10">
+                        {interest}
+                      </span>
+                    ))}
+                    {profile.zodiac && (
+                      <span className="px-3 py-1 bg-rose-500/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase text-rose-300 tracking-widest border border-rose-500/20">
+                        {profile.zodiac}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 export default function DiscoverPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [slideIndex, setSlideIndex] = useState(0);
 
   useEffect(() => {
     const fetchProfiles = async () => {
@@ -37,172 +144,104 @@ export default function DiscoverPage() {
     fetchProfiles();
   }, []);
 
-  const swipe = async (toUserId: string, status: "like" | "dislike") => {
+  const handleSwipe = async (toUserId: string, status: "like" | "dislike") => {
     try {
-      setProfiles((prev) => prev.filter((p) => p._id !== toUserId));
       await axios.post("/api/match/swipe", { toUserId, status });
+      // Remove from list if needed, but CardStack manages its own index
     } catch {
-      alert("Action failed. Try again.");
+      console.error("Swipe failed");
     }
   };
 
   if (loading)
     return (
-      <div className="flex h-screen items-center justify-center bg-white">
-        <div className="animate-bounce text-rose-500 font-black text-2xl italic">
-          FINDING MATCHES...
+      <div className="flex h-[70vh] items-center justify-center">
+        <div className="relative">
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="w-24 h-24 bg-rose-500/10 rounded-full flex items-center justify-center"
+          >
+            <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center shadow-lg shadow-rose-500/40">
+              <Sparkles className="text-white w-8 h-8" />
+            </div>
+          </motion.div>
+          <motion.div
+            animate={{ scale: [1.2, 1, 1.2], opacity: [0.5, 0.2, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="absolute inset-0 border-2 border-rose-500/20 rounded-full"
+          />
         </div>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4">
-      <div className="w-full max-w-md mb-8 flex justify-between items-center">
-        <h2 className="text-3xl font-black italic text-black tracking-tighter">
-          Discover
-        </h2>
-        <div className="bg-rose-100 text-rose-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
-          {profiles.length} Nearby
+    <div className="max-w-md mx-auto h-full flex flex-col">
+      {/* Top Bar */}
+      <div className="flex justify-between items-center mb-8 pt-2">
+        <div>
+          <h2 className="text-3xl font-black text-gradient italic tracking-tighter">Discover</h2>
+          <p className="text-[10px] font-black uppercase text-[var(--text-secondary)] tracking-[0.2em]">New people nearby</p>
         </div>
+        <button className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-[var(--text-secondary)] hover:text-rose-500 transition-colors">
+          <Search className="w-6 h-6" />
+        </button>
       </div>
 
       {errorMessage ? (
-        <div className="max-w-md w-full bg-white p-10 rounded-[40px] shadow-xl text-center border border-rose-100">
-          <div className="text-5xl mb-4">👀</div>
-          <h3 className="text-black font-black text-xl mb-2">Profile Incomplete!</h3>
-          <p className="text-gray-500 text-sm font-medium mb-6">
-            You need to add a photo and bio before you can see who's out there.
-          </p>
+        <div className="card-premium p-10 text-center flex flex-col items-center gap-6">
+          <div className="w-20 h-20 bg-rose-500/10 rounded-full flex items-center justify-center text-rose-500">
+            <Info className="w-10 h-10" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-black">Profile Incomplete</h3>
+            <p className="text-sm text-[var(--text-secondary)] font-medium">To keep things fair, you need to add at least one photo and a bio before you can see others.</p>
+          </div>
           <Link
-            href="/profile"
-            className="inline-block bg-black text-white px-8 py-3 rounded-2xl font-black text-sm hover:scale-105 transition-transform"
+            href="/dashboard/profile"
+            className="btn-primary w-full"
           >
-            COMPLETE PROFILE
+            Finish Profile
           </Link>
         </div>
       ) : profiles.length > 0 ? (
-        <div className="relative w-full max-w-100 aspect-9/16 group">
-          {profiles.slice(0, 1).map((p) => {
-            const slides = [
-              {
-                photo: p.photos?.[0],
-                content: (
-                  <>
-                    <h3 className="text-3xl font-black">
-                      {p.fullName},{" "}
-                      {p.age || (p.dateOfBirth ? calculateAge(p.dateOfBirth) : "N/A")}
-                    </h3>
-                    <p className="text-sm font-medium opacity-90 mt-1 line-clamp-2">
-                      {p.bio || "No bio yet..."}
-                    </p>
-                    <div className="flex gap-2 mt-3">
-                      <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase">
-                        {p.culture || "Nepal"}
-                      </span>
-                      <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase">
-                        {p.zodiac || "Star"}
-                      </span>
-                    </div>
-                  </>
-                ),
-              },
-              {
-                photo: p.photos?.[1],
-                content: (
-                  <>
-                    <p className="text-sm font-medium opacity-90 mt-1">
-                      Interests: {p.interests?.length ? p.interests.join(", ") : "Not specified"}
-                    </p>
-                    <p className="text-sm font-medium opacity-90 mt-1">
-                      Height: {p.height || "N/A"} cm
-                    </p>
-                  </>
-                ),
-              },
-              {
-                photo: p.photos?.[2],
-                content: (
-                  <>
-                    <p className="text-sm font-medium opacity-90 mt-1">
-                      Education: {p.education || "N/A"}
-                    </p>
-                    <p className="text-sm font-medium opacity-90 mt-1">
-                      Family Plan: {p.familyPlan || "N/A"}
-                    </p>
-                  </>
-                ),
-              },
-            ];
+        <div className="flex-1 flex flex-col gap-10">
+          <CardStack profiles={profiles} onSwipe={handleSwipe} />
 
-            return (
-              <div
-                key={p._id}
-                className="relative w-full h-full bg-white rounded-[40px] shadow-2xl overflow-hidden border-4 border-white animate-in fade-in zoom-in duration-300"
-              >
-                <img
-                  src={
-                    slides[slideIndex].photo
-                      ? `${process.env.NEXT_PUBLIC_API_URL}/${slides[slideIndex].photo}`
-                      : "/default-avatar.png"
-                  }
-                  alt={p.fullName}
-                  className="w-full h-full object-cover"
-                />
-
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-linear-to-t from-black/90 via-transparent to-transparent" />
-
-                {/* User Info */}
-                <div className="absolute bottom-24 left-6 right-6 text-white">
-                  {slides[slideIndex].content}
-                </div>
-
-                {/* Carousel Navigation */}
-                <div className="absolute top-1/2 -translate-y-1/2 w-full flex justify-between px-4">
-                  <button
-                    onClick={() =>
-                      setSlideIndex((slideIndex - 1 + slides.length) % slides.length)
-                    }
-                    className="bg-white rounded-full p-2 shadow hover:scale-110 transition"
-                  >
-                    ◀
-                  </button>
-                  <button
-                    onClick={() => setSlideIndex((slideIndex + 1) % slides.length)}
-                    className="bg-white rounded-full p-2 shadow hover:scale-110 transition"
-                  >
-                    ▶
-                  </button>
-                </div>
-
-                {/* Floating Action Buttons */}
-                <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-6">
-                  <button
-                    onClick={() => swipe(p._id, "dislike")}
-                    className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-xl border-2 border-gray-100 text-gray-400 hover:text-red-500 hover:scale-110 active:scale-95 transition-all"
-                  >
-                    ✖
-                  </button>
-                  <button
-                    onClick={() => swipe(p._id, "like")}
-                    className="w-16 h-16 bg-linear-to-br from-rose-500 to-orange-400 rounded-full flex items-center justify-center shadow-xl text-white hover:scale-110 active:scale-95 transition-all"
-                  >
-                    ❤
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          {/* Action Buttons */}
+          <div className="flex justify-center items-center gap-6 pb-10">
+            <button className="w-14 h-14 glass rounded-full flex items-center justify-center text-yellow-500 hover:scale-110 active:scale-95 transition-all">
+              <RotateCcw className="w-6 h-6" />
+            </button>
+            <button
+              onClick={() => {
+                // Trigger swipe left via parent if possible, or just hack it with a ref
+              }}
+              className="w-20 h-20 glass rounded-full flex items-center justify-center text-rose-500 shadow-xl border border-rose-500/10 hover:scale-110 active:scale-95 transition-all"
+            >
+              <X className="w-10 h-10 stroke-[3px]" />
+            </button>
+            <button className="w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center text-white shadow-[0_10px_30px_rgba(244,63,94,0.4)] hover:scale-110 active:scale-95 transition-all">
+              <Heart className="w-10 h-10 fill-current" />
+            </button>
+            <button className="w-14 h-14 glass rounded-full flex items-center justify-center text-purple-500 hover:scale-110 active:scale-95 transition-all">
+              <Star className="w-6 h-6 fill-current" />
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="max-w-md w-full bg-white p-12 rounded-[40px] shadow-md text-center">
-          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-3xl">🏜️</span>
+        <div className="card-premium p-12 text-center flex flex-col items-center gap-6">
+          <div className="w-20 h-20 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center">
+            <Sparkles className="w-10 h-10 text-[var(--text-secondary)]" />
           </div>
-          <h3 className="text-black font-black text-xl">No one new!</h3>
-          <p className="text-gray-400 text-sm mt-2">
-            Try expanding your search distance or preferences.
-          </p>
+          <div className="space-y-2">
+            <h3 className="text-xl font-black">No more sparks!</h3>
+            <p className="text-sm text-[var(--text-secondary)] font-medium">You&apos;ve seen everyone in your area. Try expanding your search distance or check back later.</p>
+          </div>
+          <button className="btn-primary flex items-center gap-2">
+            <RotateCcw className="w-5 h-5" />
+            <span>Re-shuffle</span>
+          </button>
         </div>
       )}
     </div>
