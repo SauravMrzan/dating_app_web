@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import axios from "@/lib/api/axios";
 import Link from "next/link";
 import { API } from "@/lib/api/endpoints"; // centralized endpoints
+import { getImageUrl } from "@/lib/utils/image";
 
 export default function MatchIdPage() {
   const [matches, setMatches] = useState<any[]>([]);
@@ -96,11 +97,7 @@ export default function MatchIdPage() {
                 >
                   <div className="relative">
                     <img
-                      src={
-                        m.otherUser?.photos?.[0]
-                          ? `${process.env.NEXT_PUBLIC_API_URL}/${m.otherUser.photos[0]}`
-                          : "/default-avatar.png"
-                      }
+                      src={getImageUrl(m.otherUser?.photos?.[0])}
                       className="w-20 h-28 object-cover rounded-[20px] border-2 border-rose-500 p-0.5 group-hover:scale-105 transition-all shadow-lg"
                       alt={m.otherUser?.fullName || "Match"}
                     />

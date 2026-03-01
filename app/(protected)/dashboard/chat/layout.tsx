@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import axios from "@/lib/api/axios";
 import { API } from "@/lib/api/endpoints";
+import { getImageUrl } from "@/lib/utils/image";
 
 export default function ChatLayout({
   children,
@@ -59,16 +60,11 @@ export default function ChatLayout({
               <li key={m._id}>
                 <Link
                   href={`/dashboard/chat/${m.otherUser._id}`}
-                  className={`flex items-center gap-3 p-3 hover:bg-gray-200 transition ${
-                    friendId === m.otherUser._id ? "bg-gray-300 font-bold" : ""
-                  }`}
+                  className={`flex items-center gap-3 p-3 hover:bg-gray-200 transition ${friendId === m.otherUser._id ? "bg-gray-300 font-bold" : ""
+                    }`}
                 >
                   <img
-                    src={
-                      m.otherUser?.photos?.[0]
-                        ? `${process.env.NEXT_PUBLIC_API_URL}/${m.otherUser.photos[0]}`
-                        : "/default-avatar.png"
-                    }
+                    src={getImageUrl(m.otherUser?.photos?.[0])}
                     alt={m.otherUser?.fullName || "Match"}
                     className="w-10 h-10 rounded-full object-cover border"
                   />

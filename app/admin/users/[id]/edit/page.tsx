@@ -4,11 +4,12 @@ import React, { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/api/axios";
 import { API } from "@/lib/api/endpoints";
-import { 
-  Camera, ArrowLeft, Shield, User, 
-  Smartphone, Mail, Save, X, Loader2, Info 
+import {
+  Camera, ArrowLeft, Shield, User,
+  Smartphone, Mail, Save, X, Loader2, Info
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { getImageUrl } from "@/lib/utils/image";
 
 export default function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -45,8 +46,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
           });
 
           if (fetchedUser.profilePicture) {
-            const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
-            setPreview(`${baseUrl}${fetchedUser.profilePicture}`);
+            setPreview(getImageUrl(fetchedUser.profilePicture));
           }
         }
       } catch (err) {
@@ -75,7 +75,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
   const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
-    
+
     const data = new FormData();
     Object.entries(formData).forEach(([key, value]) => data.append(key, value));
     if (file) data.append("image", file); // Changed to "image" to match your Multer requirement
@@ -106,7 +106,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
       {/* Breadcrumb Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <button 
+          <button
             onClick={() => router.back()}
             className="flex items-center gap-2 text-gray-400 hover:text-[#D32F2F] transition-colors mb-2"
           >
@@ -115,7 +115,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
           </button>
           <h1 className="text-3xl font-black text-gray-900 tracking-tight">Modify User <span className="text-[#D32F2F]">Record</span></h1>
         </div>
-        
+
         <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
           <Info size={16} />
           <span className="text-[10px] font-bold uppercase tracking-wide">Editing ID: {id?.toString().slice(-6)}</span>
@@ -149,9 +149,9 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
               <Shield size={18} className="text-[#D32F2F]" />
               <span className="text-xs font-black uppercase tracking-widest">Access Control</span>
             </div>
-            <select 
-              name="role" 
-              value={formData.role} 
+            <select
+              name="role"
+              value={formData.role}
               onChange={handleInputChange}
               className="w-full bg-gray-50 border border-gray-100 p-4 rounded-xl text-gray-800 font-bold outline-none focus:ring-2 focus:ring-[#D32F2F]/10 focus:border-[#D32F2F] transition-all text-sm appearance-none"
             >
@@ -172,14 +172,14 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
             </div>
 
             <div className="mt-10 pt-8 border-t border-gray-50 flex gap-4">
-              <button 
+              <button
                 disabled={submitting}
-                type="submit" 
+                type="submit"
                 className="flex-1 bg-[#D32F2F] text-white font-bold py-4 rounded-xl uppercase text-xs tracking-[0.15em] hover:bg-[#B71C1C] transition-all flex items-center justify-center gap-3 shadow-lg shadow-[#D32F2F]/20"
               >
                 {submitting ? <Loader2 className="animate-spin" size={18} /> : <><Save size={18} /> Update Record</>}
               </button>
-              <button 
+              <button
                 type="button"
                 onClick={() => router.back()}
                 className="px-8 py-4 bg-gray-100 text-gray-500 font-bold rounded-xl uppercase text-xs tracking-[0.15em] hover:bg-gray-200 transition-all"
@@ -201,9 +201,9 @@ function AdminInputField({ icon: Icon, label, name, value, onChange, isSelect = 
         <Icon size={14} className="text-[#D32F2F]" /> {label}
       </label>
       {isSelect ? (
-        <select 
-          name={name} 
-          value={value} 
+        <select
+          name={name}
+          value={value}
           onChange={onChange}
           className="w-full bg-gray-50 border border-gray-100 p-4 rounded-xl text-gray-800 font-bold outline-none focus:ring-2 focus:ring-[#D32F2F]/10 focus:border-[#D32F2F] transition-all text-sm"
         >
@@ -212,11 +212,11 @@ function AdminInputField({ icon: Icon, label, name, value, onChange, isSelect = 
           ))}
         </select>
       ) : (
-        <input 
-          name={name} 
-          value={value} 
+        <input
+          name={name}
+          value={value}
           onChange={onChange}
-          className="w-full bg-gray-50 border border-gray-100 p-4 rounded-xl text-gray-800 font-bold outline-none focus:ring-2 focus:ring-[#D32F2F]/10 focus:border-[#D32F2F] transition-all text-sm" 
+          className="w-full bg-gray-50 border border-gray-100 p-4 rounded-xl text-gray-800 font-bold outline-none focus:ring-2 focus:ring-[#D32F2F]/10 focus:border-[#D32F2F] transition-all text-sm"
         />
       )}
     </div>

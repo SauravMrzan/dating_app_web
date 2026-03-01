@@ -13,6 +13,7 @@ import {
   User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getImageUrl } from "@/lib/utils/image";
 
 export default function MatchesPage() {
   const [matches, setMatches] = useState<any[]>([]);
@@ -137,7 +138,7 @@ export default function MatchesPage() {
                     <div className="relative">
                       <div className="w-24 h-32 rounded-3xl overflow-hidden border-2 border-rose-500/30 group-hover:border-rose-500 transition-all shadow-lg group-hover:shadow-rose-500/20 group-hover:scale-105 duration-300">
                         <img
-                          src={m.otherUser?.photos?.[0] ? `${process.env.NEXT_PUBLIC_API_URL}/${m.otherUser.photos[0]}` : "/default-avatar.png"}
+                          src={getImageUrl(m.otherUser?.photos?.[0])}
                           className="w-full h-full object-cover"
                           alt={m.otherUser?.fullName}
                         />
@@ -179,7 +180,7 @@ export default function MatchesPage() {
                     >
                       <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-md">
                         <img
-                          src={m.otherUser?.photos?.[0] ? `${process.env.NEXT_PUBLIC_API_URL}/${m.otherUser.photos[0]}` : "/default-avatar.png"}
+                          src={getImageUrl(m.otherUser?.photos?.[0])}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           alt={m.otherUser?.fullName}
                         />

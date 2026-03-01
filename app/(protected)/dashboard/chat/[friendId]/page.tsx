@@ -16,6 +16,7 @@ import {
   Heart
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getImageUrl } from "@/lib/utils/image";
 
 export default function ChatPage() {
   const params = useParams();
@@ -107,7 +108,7 @@ export default function ChatPage() {
             <div className="relative">
               <div className="w-11 h-11 rounded-2xl overflow-hidden border-2 border-rose-500/20 group-hover:border-rose-500/50 transition-colors shadow-sm">
                 <img
-                  src={friendUser?.photos?.[0] ? `${process.env.NEXT_PUBLIC_API_URL}/${friendUser.photos[0]}` : "/default-avatar.png"}
+                  src={getImageUrl(friendUser?.photos?.[0])}
                   alt={friendUser?.fullName}
                   className="w-full h-full object-cover"
                 />
@@ -162,7 +163,7 @@ export default function ChatPage() {
                 <div className="w-8 h-8 flex-shrink-0">
                   {showAvatar ? (
                     <img
-                      src={friendUser?.photos?.[0] ? `${process.env.NEXT_PUBLIC_API_URL}/${friendUser.photos[0]}` : "/default-avatar.png"}
+                      src={getImageUrl(friendUser?.photos?.[0])}
                       className="w-8 h-8 rounded-full object-cover border border-[var(--border-color)] shadow-sm"
                       alt="avatar"
                     />

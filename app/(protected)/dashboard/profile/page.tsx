@@ -18,6 +18,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getImageUrl } from "@/lib/utils/image";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -226,7 +227,7 @@ export default function ProfilePage() {
                   key={`saved-${idx}`}
                   className="aspect-[3/4] rounded-3xl overflow-hidden relative group"
                 >
-                  <img src={`/${photo}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="saved" />
+                  <img src={getImageUrl(photo)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="saved" />
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </motion.div>
               ))}
@@ -352,8 +353,8 @@ export default function ProfilePage() {
                           type="button"
                           onClick={() => handlePreferredCultureChange(c)}
                           className={`py-3 px-4 rounded-2xl text-xs font-bold transition-all border-2 ${formData.preferredCulture.includes(c)
-                              ? "bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-500/20"
-                              : "bg-[var(--bg-secondary)] border-transparent text-[var(--text-secondary)] hover:border-rose-300"
+                            ? "bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-500/20"
+                            : "bg-[var(--bg-secondary)] border-transparent text-[var(--text-secondary)] hover:border-rose-300"
                             }`}
                         >
                           {c}

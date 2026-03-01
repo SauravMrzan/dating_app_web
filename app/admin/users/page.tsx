@@ -16,6 +16,7 @@ import Link from "next/link";
 import axiosInstance from "@/lib/api/axios";
 import { API } from "@/lib/api/endpoints";
 import { toast } from "react-hot-toast";
+import { getImageUrl } from "@/lib/utils/image";
 
 export default function AdminUserTable() {
   const [users, setUsers] = useState<any[]>([]);
@@ -190,7 +191,7 @@ export default function AdminUserTable() {
                         <div className="w-10 h-10 rounded-xl bg-gray-100 overflow-hidden border border-gray-200 shrink-0">
                           {user.profilePicture ? (
                             <img
-                              src={`${process.env.NEXT_PUBLIC_API_URL}${user.profilePicture}`}
+                              src={getImageUrl(user.profilePicture)}
                               alt=""
                               className="w-full h-full object-cover"
                               onError={(e) => {

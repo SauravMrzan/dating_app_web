@@ -2,26 +2,24 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { 
-  ArrowLeft, Shield, Calendar, Mail, 
-  Hash, User as UserIcon, Edit, Trash2, 
+import {
+  ArrowLeft, Shield, Calendar, Mail,
+  Hash, User as UserIcon, Edit, Trash2,
   BadgeCheck, Clock, Loader2
 } from "lucide-react";
 import axiosInstance from "@/lib/api/axios";
 import { API } from "@/lib/api/endpoints";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
+import { getImageUrl } from "@/lib/utils/image";
 
 export default function UserDetailPage() {
   const params = useParams();
   const id = params?.id as string; // Ensure id is cast to string
   const router = useRouter();
-  
+
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  // Use the API base URL for images
-  const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -63,20 +61,20 @@ export default function UserDetailPage() {
     <div className="space-y-6">
       {/* Top Navigation Bar */}
       <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-        <button 
+        <button
           onClick={() => router.push("/admin/users")}
           className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-[#D32F2F] transition-colors"
         >
           <ArrowLeft size={16} /> Back to Directory
         </button>
         <div className="flex gap-2">
-          <Link 
+          <Link
             href={`/admin/users/${id}/edit`}
             className="p-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all border border-gray-100"
           >
             <Edit size={18} />
           </Link>
-          <button 
+          <button
             onClick={onDelete}
             className="p-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-red-50 hover:text-red-600 transition-all border border-gray-100"
           >
@@ -93,10 +91,10 @@ export default function UserDetailPage() {
             <div className="relative inline-block">
               <div className="w-32 h-32 rounded-2xl border-4 border-white bg-gray-100 overflow-hidden shadow-lg mx-auto">
                 {user?.profilePicture ? (
-                  <img 
-                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `${IMAGE_BASE_URL}${user.profilePicture}`} 
-                    alt={user.fullName} 
-                    className="w-full h-full object-cover" 
+                  <img
+                    src={getImageUrl(user.profilePicture)}
+                    alt={user.fullName}
+                    className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-50">
@@ -106,7 +104,7 @@ export default function UserDetailPage() {
               </div>
               <div className="absolute bottom-1 right-1 bg-green-500 border-2 border-white w-5 h-5 rounded-full" />
             </div>
-            
+
             <h2 className="mt-4 text-2xl font-black text-gray-900 tracking-tight">{user?.fullName}</h2>
             <p className="text-xs font-bold text-[#D32F2F] uppercase tracking-[0.2em] mb-4">
               System ID: {id?.toString().slice(-6).toUpperCase()}
@@ -125,16 +123,16 @@ export default function UserDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm">
             <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6 flex items-center gap-2">
-               <Hash size={16} className="text-[#D32F2F]" /> Account Metadata
+              <Hash size={16} className="text-[#D32F2F]" /> Account Metadata
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <DetailItem label="Full Legal Name" value={user?.fullName} icon={<UserIcon size={16}/>} />
-              <DetailItem label="Verified Email" value={user?.email} icon={<Mail size={16}/>} />
-              <DetailItem label="Date of Birth" value={user?.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : 'Not Provided'} icon={<Calendar size={16}/>} />
-              <DetailItem label="Database ID" value={id} icon={<Hash size={16}/>} isCode />
-              <DetailItem label="Registration Date" value={user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'} icon={<Clock size={16}/>} />
-              <DetailItem label="Account Status" value="Active / Verified" icon={<BadgeCheck size={16}/>} />
+              <DetailItem label="Full Legal Name" value={user?.fullName} icon={<UserIcon size={16} />} />
+              <DetailItem label="Verified Email" value={user?.email} icon={<Mail size={16} />} />
+              <DetailItem label="Date of Birth" value={user?.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : 'Not Provided'} icon={<Calendar size={16} />} />
+              <DetailItem label="Database ID" value={id} icon={<Hash size={16} />} isCode />
+              <DetailItem label="Registration Date" value={user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'} icon={<Clock size={16} />} />
+              <DetailItem label="Account Status" value="Active / Verified" icon={<BadgeCheck size={16} />} />
             </div>
           </div>
 

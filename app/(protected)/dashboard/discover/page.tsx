@@ -15,6 +15,7 @@ import {
   Check
 } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { getImageUrl } from "@/lib/utils/image";
 
 const calculateAge = (dob: string) => {
   const birthDate = new Date(dob);
@@ -78,7 +79,7 @@ const SwipeCard = ({
     >
       <div className="relative w-full h-full rounded-[40px] overflow-hidden shadow-2xl border-4 border-white bg-[var(--card-bg)]">
         <img
-          src={profile.photos?.[0] ? `${process.env.NEXT_PUBLIC_API_URL || ""}/${profile.photos[0]}` : "/default-avatar.png"}
+          src={getImageUrl(profile.photos?.[0])}
           alt={profile.fullName}
           className="w-full h-full object-cover"
         />
