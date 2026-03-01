@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import axios from "@/lib/api/axios";
 import { API } from "@/lib/api/endpoints";
 import {
+  LayoutDashboard,
   User,
   Flame,
   Heart,
@@ -17,6 +18,7 @@ import {
 import { motion } from "framer-motion";
 
 const navItems = [
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/dashboard/discover", icon: Flame, label: "Discover" },
   { href: "/dashboard/matches", icon: Heart, label: "Matches" },
   { href: "/dashboard/chat", icon: MessageCircle, label: "Chat" },
@@ -68,7 +70,10 @@ export default function DashboardLayout({
 
         <nav className="space-y-2 flex-1">
           {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href);
+            const isRootDashboard = item.href === "/dashboard";
+            const isActive = isRootDashboard
+              ? pathname === "/dashboard"
+              : pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
@@ -128,7 +133,10 @@ export default function DashboardLayout({
         {/* Mobile Bottom Navigation */}
         <nav className="md:hidden glass fixed bottom-0 left-0 right-0 h-20 flex justify-around items-center px-4 pb-4 z-50">
           {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href);
+            const isRootDashboard = item.href === "/dashboard";
+            const isActive = isRootDashboard
+              ? pathname === "/dashboard"
+              : pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}

@@ -7,12 +7,8 @@ import { useEffect, useState } from "react";
 import {
   LogOut,
   Trash2,
-  Lock,
-  ShieldCheck,
-  Bell,
   Moon,
   Sun,
-  Smartphone,
   ChevronRight,
   Sparkles
 } from "lucide-react";
@@ -64,10 +60,6 @@ export default function SettingsPage() {
     }
   };
 
-  const resetPassword = () => {
-    window.location.href = "/forgot-password";
-  };
-
   const selectTheme = (nextTheme: AppTheme) => {
     setTheme(nextTheme);
     setThemeState(nextTheme);
@@ -111,15 +103,7 @@ export default function SettingsPage() {
 
       {/* Main Settings Sections */}
       <div className="space-y-8">
-        <Section title="Security & Privacy">
-          <Item icon={Lock} label="Update Password" onClick={resetPassword} />
-          <div className="h-[1px] bg-[var(--border-color)] mx-5" />
-          <Item icon={ShieldCheck} label="Privacy Controls" />
-        </Section>
-
         <Section title="Preferences">
-          <Item icon={Bell} label="Notifications" />
-          <div className="h-[1px] bg-[var(--border-color)] mx-5" />
           <Item icon={Moon} label="Appearance" />
           <div className="px-5 pb-5">
             <div className="grid grid-cols-2 gap-2 rounded-2xl bg-[var(--bg-secondary)] p-1">
@@ -147,24 +131,7 @@ export default function SettingsPage() {
               </button>
             </div>
           </div>
-          <div className="h-[1px] bg-[var(--border-color)] mx-5" />
-          <Item icon={Smartphone} label="App Settings" />
         </Section>
-
-        <section className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] px-2">
-            SoulSync Community
-          </h3>
-          <div className="card-premium p-6 bg-gradient-primary text-white flex items-center justify-between">
-            <div className="space-y-1">
-              <h4 className="font-black text-lg italic leading-none">SoulSync Gold</h4>
-              <p className="text-xs font-bold opacity-80 uppercase tracking-widest">See who likes you!</p>
-            </div>
-            <button className="bg-white text-rose-500 px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-black/10 hover:scale-105 transition-transform">
-              Upgrade
-            </button>
-          </div>
-        </section>
 
         <Section title="Account Actions">
           <Item icon={LogOut} label="Sign Out" onClick={logout} />

@@ -1,18 +1,15 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import axios from "@/lib/api/axios";
 import Link from "next/link";
 import {
-  X,
-  Heart,
+  ChevronLeft,
+  ChevronRight,
   RotateCcw,
-  Star,
   Info,
   MapPin,
-  Sparkles,
-  Search,
-  Check
+  Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { getImageUrl } from "@/lib/utils/image";
@@ -108,9 +105,6 @@ const SwipeCard = ({
                 <span>{profile.culture || "Nearby"}</span>
               </div>
             </div>
-            <button className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20">
-              <Info className="w-5 h-5" />
-            </button>
           </div>
 
           <div className="flex flex-wrap gap-2 mt-4">
@@ -180,6 +174,7 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [triggerSwipe, setTriggerSwipe] = useState<"like" | "dislike" | null>(null);
+  const hasMoreProfiles = currentIndex < profiles.length;
 
   useEffect(() => {
     const fetchProfiles = async () => {
@@ -248,9 +243,6 @@ export default function DiscoverPage() {
           <h2 className="text-3xl font-black text-gradient italic tracking-tighter">Discover</h2>
           <p className="text-[10px] font-black uppercase text-[var(--text-secondary)] tracking-[0.2em]">New people nearby</p>
         </div>
-        <button className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-[var(--text-secondary)] hover:text-rose-500 transition-colors">
-          <Search className="w-6 h-6" />
-        </button>
       </div>
 
       {errorMessage ? (
@@ -269,7 +261,7 @@ export default function DiscoverPage() {
             Finish Profile
           </Link>
         </div>
-      ) : profiles.length > 0 ? (
+      ) : hasMoreProfiles ? (
         <div className="flex-1 flex flex-col gap-10">
           <CardStack
             profiles={profiles}
@@ -280,7 +272,7 @@ export default function DiscoverPage() {
           />
 
           {/* Action Buttons */}
-          <div className="flex justify-center items-center gap-6 pb-10">
+          <div className="flex justify-center items-center gap-4 pb-10">
             <button
               onClick={handleRewind}
               className="w-14 h-14 glass rounded-full flex items-center justify-center text-yellow-500 hover:scale-110 active:scale-95 transition-all shadow-lg"
@@ -290,23 +282,19 @@ export default function DiscoverPage() {
             </button>
             <button
               onClick={() => handleManualSwipe("dislike")}
-              className="w-20 h-20 glass rounded-full flex items-center justify-center text-rose-500 shadow-xl border border-rose-500/10 hover:scale-110 active:scale-95 transition-all"
-              title="Dislike"
+              className="w-24 h-14 glass rounded-2xl flex items-center justify-center gap-2 text-rose-500 shadow-xl border border-rose-500/10 hover:scale-105 active:scale-95 transition-all"
+              title="Swipe left"
             >
-              <X className="w-10 h-10 stroke-[3px]" />
+              <ChevronLeft className="w-6 h-6 stroke-[3px]" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Left</span>
             </button>
             <button
               onClick={() => handleManualSwipe("like")}
-              className="w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center text-white shadow-[0_10px_30px_rgba(244,63,94,0.4)] hover:scale-110 active:scale-95 transition-all"
-              title="Like"
+              className="w-24 h-14 bg-gradient-primary rounded-2xl flex items-center justify-center gap-2 text-white shadow-[0_10px_30px_rgba(244,63,94,0.4)] hover:scale-105 active:scale-95 transition-all"
+              title="Swipe right"
             >
-              <Heart className="w-10 h-10 fill-current" />
-            </button>
-            <button
-              className="w-14 h-14 glass rounded-full flex items-center justify-center text-purple-500 hover:scale-110 active:scale-95 transition-all shadow-lg"
-              title="Super Like"
-            >
-              <Star className="w-6 h-6 fill-current" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Right</span>
+              <ChevronRight className="w-6 h-6 stroke-[3px]" />
             </button>
           </div>
         </div>

@@ -3,25 +3,64 @@
 import { useEffect, useState } from "react";
 import axios from "@/lib/api/axios";
 import Link from "next/link";
-import { API } from "@/lib/api/endpoints"; // centralized endpoints
+import { API } from "@/lib/api/endpoints";
+
+type CurrentUser = {
+  _id?: string;
+  fullName?: string;
+  bio?: string;
+  photos?: string[];
+};
+
+type DashboardStats = {
+  matches: number;
+  unreadAlerts: number;
+  profileReady: string;
+};
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null);
-  const [stats, setStats] = useState({ matches: 0, messages: 0, views: 0 });
+  const [user, setUser] = useState<CurrentUser | null>(null);
+  const [stats, setStats] = useState<DashboardStats>({
+    matches: 0,
+    unreadAlerts: 0,
+    profileReady: "Incomplete",
+  });
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchOverview = async () => {
       try {
-        const res = await axios.get(API.AUTH.WHOAMI);
-        setUser(res.data.data);
+        const [whoamiRes, matchesRes, notificationsRes] = await Promise.all([
+          axios.get(API.AUTH.WHOAMI),
+          axios.get(API.MATCH.MATCHES),
+          axios.get(API.NOTIFICATION.LIST),
+        ]);
 
-        // Placeholder stats - in a real app, fetch from backend
-        setStats({ matches: 12, messages: 5, views: 124 });
+        const currentUser = (whoamiRes.data?.data || null) as CurrentUser | null;
+        setUser(currentUser);
+
+        const matches = Array.isArray(matchesRes.data?.data)
+          ? matchesRes.data.data.length
+          : 0;
+
+        const notifications = Array.isArray(notificationsRes.data?.data)
+          ? notificationsRes.data.data
+          : [];
+
+        const unreadAlerts = notifications.filter(
+          (item: { isRead?: boolean }) => !item.isRead,
+        ).length;
+
+        const hasPhoto = Boolean(currentUser?.photos?.[0]);
+        const hasBio = Boolean(currentUser?.bio?.trim());
+        const profileReady = hasPhoto && hasBio ? "Complete" : "Incomplete";
+
+        setStats({ matches, unreadAlerts, profileReady });
       } catch (err) {
         console.error("Failed to load user", err);
       }
     };
-    fetchUser();
+
+    fetchOverview();
   }, []);
 
   const cards = [
@@ -34,9 +73,9 @@ export default function DashboardPage() {
     },
     {
       title: "Chat Hub",
-      desc: "Jump back into conversations",
+      desc: "Jump back into your chats",
       icon: "💬",
-      link: "/dashboard/chat", // ✅ UI route only
+      link: "/dashboard/chat",
       color: "bg-orange-500",
     },
     {
@@ -66,7 +105,7 @@ export default function DashboardPage() {
           Yo, {user?.fullName?.split(" ")[0] || "Explorer"}!
         </h1>
         <p className="text-gray-400 font-medium mt-2">
-          Ready for some activity-based learning today?
+          Here&apos;s your live dashboard activity.
         </p>
       </header>
 
@@ -74,8 +113,8 @@ export default function DashboardPage() {
       <div className="grid grid-cols-3 gap-4 mb-10">
         {[
           { label: "Matches", val: stats.matches },
-          { label: "Messages", val: stats.messages },
-          { label: "Profile Views", val: stats.views },
+          { label: "Unread Alerts", val: stats.unreadAlerts },
+          { label: "Profile", val: stats.profileReady },
         ].map((stat, i) => (
           <div
             key={i}
@@ -84,7 +123,7 @@ export default function DashboardPage() {
             <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">
               {stat.label}
             </p>
-            <p className="text-2xl font-black text-black mt-1">{stat.val}</p>
+            <p className="text-2xl font-black text-black mt-1">{String(stat.val)}</p>
           </div>
         ))}
       </div>
@@ -135,33 +174,6 @@ export default function DashboardPage() {
             </div>
           </Link>
         ))}
-      </div>
-
-      {/* Course Progress / Tip Section */}
-      <div className="mt-12 p-8 bg-black rounded-[40px] text-white flex flex-col md:flex-row items-center justify-between gap-6">
-        <div>
-          <h4 className="text-xl font-black italic uppercase">
-            Project Progress
-          </h4>
-          <p className="text-gray-400 text-sm font-medium mt-1">
-            Complete at least 3 projects to graduate the course.
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex -space-x-3">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="w-10 h-10 rounded-full border-4 border-black bg-rose-500 flex items-center justify-center font-black text-xs"
-              >
-                {i}
-              </div>
-            ))}
-          </div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-rose-500">
-            0/3 Done
-          </p>
-        </div>
       </div>
     </div>
   );
