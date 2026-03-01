@@ -8,9 +8,9 @@ import {
   Users,
   LayoutDashboard,
   UserPlus,
-  Settings,
   LogOut,
   ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 
 export default function AdminLayout({
@@ -25,6 +25,7 @@ export default function AdminLayout({
     { name: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
     { name: "User Management", icon: Users, path: "/admin/users" },
     { name: "Create User", icon: UserPlus, path: "/admin/users/create" },
+    { name: "Reports", icon: ShieldAlert, path: "/admin/reports" },
   ];  
 
   const handleConfirmLogout = () => {

@@ -12,6 +12,10 @@ export const API = {
     USER: {
       CREATE: "/api/admin/users",
     },
+    REPORTS: {
+      LIST: "/api/reports/admin",
+      RESOLVE: (reportId: string) => `/api/reports/admin/${reportId}/resolve`,
+    },
   },
 
   MATCH: {
@@ -29,5 +33,15 @@ export const API = {
   USER: {
     BY_ID: (userId: string) => `/api/user/${userId}`, // ✅ fetch user by ID
     ALL: "/api/user", // optional: list all users
+  },
+
+  REPORT: {
+    CREATE: "/api/reports",
+  },
+
+  NOTIFICATION: {
+    LIST: "/api/notifications",
+    READ: (notificationId: string) => `/api/notifications/${notificationId}/read`,
+    READ_ALL: "/api/notifications/read-all",
   },
 };

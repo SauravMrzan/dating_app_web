@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import axios from "@/lib/api/axios";
+import { API } from "@/lib/api/endpoints";
 import {
   User,
   Flame,
   Heart,
   MessageCircle,
   Settings,
-  Sparkles
+  Sparkles,
+  Bell
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -16,9 +20,15 @@ const navItems = [
   { href: "/dashboard/discover", icon: Flame, label: "Discover" },
   { href: "/dashboard/matches", icon: Heart, label: "Matches" },
   { href: "/dashboard/chat", icon: MessageCircle, label: "Chat" },
+  { href: "/dashboard/notifications", icon: Bell, label: "Alerts" },
   { href: "/dashboard/profile", icon: User, label: "Profile" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
+
+type NotificationItem = {
+  _id: string;
+  isRead: boolean;
+};
 
 export default function DashboardLayout({
   children,
@@ -26,6 +36,22 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const res = await axios.get(API.NOTIFICATION.LIST);
+        const notifications = (res.data?.data || []) as NotificationItem[];
+        const unread = notifications.filter((n) => !n.isRead).length;
+        setUnreadCount(unread);
+      } catch {
+        setUnreadCount(0);
+      }
+    };
+
+    fetchUnread();
+  }, [pathname]);
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-[var(--bg-main)] overflow-hidden">
@@ -48,14 +74,19 @@ export default function DashboardLayout({
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 group ${isActive
-                    ? "bg-rose-500/10 text-rose-500"
-                    : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
+                  ? "bg-rose-500/10 text-rose-500"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
                   }`}
               >
                 <item.icon className={`w-6 h-6 ${isActive ? "fill-rose-500/10" : "group-hover:scale-110 transition-transform"}`} />
                 <span className={`hidden lg:block font-bold ${isActive ? "opacity-100" : "opacity-70"}`}>
                   {item.label}
                 </span>
+                {item.href === "/dashboard/notifications" && unreadCount > 0 && (
+                  <span className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
                 {isActive && (
                   <motion.div
                     layoutId="active-pill"
@@ -78,9 +109,14 @@ export default function DashboardLayout({
               SoulSync
             </span>
           </div>
-          <button className="w-8 h-8 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center">
-            <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
-          </button>
+          <Link href="/dashboard/notifications" className="relative w-8 h-8 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center">
+            <Bell className="w-4 h-4 text-rose-500" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </Link>
         </header>
 
         <main className="flex-1 overflow-y-auto no-scrollbar relative">
@@ -103,6 +139,11 @@ export default function DashboardLayout({
                   }`}>
                   <item.icon className={`w-7 h-7 ${isActive ? "fill-rose-500/5 rotate-12" : ""}`} />
                 </div>
+                {item.href === "/dashboard/notifications" && unreadCount > 0 && (
+                  <span className="absolute top-1 right-4 min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
                 {isActive && (
                   <motion.div
                     layoutId="active-dot"

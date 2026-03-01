@@ -10,16 +10,42 @@ import {
   Heart,
   Sparkles,
   ChevronRight,
-  User
+  Flag
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getImageUrl } from "@/lib/utils/image";
+import { toast } from "react-hot-toast";
+
+type MatchUser = {
+  _id: string;
+  fullName?: string;
+  photos?: string[];
+};
+
+type MatchItem = {
+  _id: string;
+  fromUser?: MatchUser;
+  toUser?: MatchUser;
+};
+
+type MatchWithOtherUser = MatchItem & {
+  otherUser: MatchUser;
+};
+
+type ReportTarget = {
+  id: string;
+  fullName?: string;
+};
 
 export default function MatchesPage() {
-  const [matches, setMatches] = useState<any[]>([]);
+  const [matches, setMatches] = useState<MatchItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
+  const [reportReason, setReportReason] = useState("");
+  const [submittingReport, setSubmittingReport] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,7 +81,7 @@ export default function MatchesPage() {
     );
   }
 
-  const uniqueMatches = matches.reduce((acc: any[], m) => {
+  const uniqueMatches = matches.reduce<MatchWithOtherUser[]>((acc, m) => {
     const otherUser =
       currentUserId && m.fromUser?._id === currentUserId
         ? m.toUser
@@ -69,12 +95,53 @@ export default function MatchesPage() {
     return acc;
   }, []);
 
-  const filteredMatches = uniqueMatches.filter(m =>
+  const filteredMatches = uniqueMatches.filter((m) =>
     m.otherUser?.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const openReportModal = (reportedUserId: string, fullName?: string) => {
+    setReportTarget({ id: reportedUserId, fullName });
+    setReportReason("");
+    setReportModalOpen(true);
+  };
+
+  const closeReportModal = () => {
+    if (submittingReport) return;
+    setReportModalOpen(false);
+    setReportTarget(null);
+    setReportReason("");
+  };
+
+  const submitReport = async () => {
+    if (!reportTarget) return;
+
+    if (reportReason.trim().length < 5) {
+      toast.error("Please provide a clear reason (at least 5 characters).");
+      return;
+    }
+
+    try {
+      setSubmittingReport(true);
+      await axios.post(API.REPORT.CREATE, {
+        reportedUserId: reportTarget.id,
+        reason: reportReason.trim(),
+      });
+      toast.success("Report submitted. Admin will review it.");
+      closeReportModal();
+    } catch (error: unknown) {
+      const message =
+        error && typeof error === "object" && "message" in error
+          ? String((error as { message?: string }).message)
+          : "Failed to submit report";
+      toast.error(message);
+    } finally {
+      setSubmittingReport(false);
+    }
+  };
+
   return (
-    <div className="max-w-2xl mx-auto space-y-10">
+    <>
+      <div className="max-w-2xl mx-auto space-y-10">
       {/* Header */}
       <div className="flex flex-col gap-4">
         <div>
@@ -174,30 +241,40 @@ export default function MatchesPage() {
                     transition={{ delay: 0.1 + idx * 0.05 }}
                     key={`chat-${m._id}`}
                   >
-                    <Link
-                      href={`/dashboard/chat/${m.otherUser._id}`}
-                      className="flex items-center gap-4 p-4 card-premium hover:bg-rose-500/5 hover:-translate-y-1 transition-all group"
-                    >
-                      <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-md">
-                        <img
-                          src={getImageUrl(m.otherUser?.photos?.[0])}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          alt={m.otherUser?.fullName}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-lg text-[var(--text-main)] group-hover:text-rose-500 transition-colors">
-                          {m.otherUser?.fullName}
-                        </h4>
-                        <p className="text-xs text-[var(--text-secondary)] group-hover:text-[var(--text-main)]/60 transition-colors font-medium">
-                          Say something nice! Hand-picked for you...
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <div className="w-2 h-2 bg-rose-500 rounded-full shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
-                        <ChevronRight className="w-5 h-5 text-[var(--text-secondary)] group-hover:text-rose-500 group-hover:translate-x-1 transition-all" />
-                      </div>
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href={`/dashboard/chat/${m.otherUser._id}`}
+                        className="flex items-center gap-4 p-4 card-premium hover:bg-rose-500/5 hover:-translate-y-1 transition-all group flex-1"
+                      >
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-md">
+                          <img
+                            src={getImageUrl(m.otherUser?.photos?.[0])}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            alt={m.otherUser?.fullName}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-lg text-[var(--text-main)] group-hover:text-rose-500 transition-colors">
+                            {m.otherUser?.fullName}
+                          </h4>
+                          <p className="text-xs text-[var(--text-secondary)] group-hover:text-[var(--text-main)]/60 transition-colors font-medium">
+                            Say something nice! Hand-picked for you...
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="w-2 h-2 bg-rose-500 rounded-full shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
+                          <ChevronRight className="w-5 h-5 text-[var(--text-secondary)] group-hover:text-rose-500 group-hover:translate-x-1 transition-all" />
+                        </div>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => openReportModal(m.otherUser._id, m.otherUser?.fullName)}
+                        className="p-3 rounded-2xl border border-rose-200 text-rose-500 hover:bg-rose-50 transition-colors"
+                        title="Report this match"
+                      >
+                        <Flag className="w-4 h-4" />
+                      </button>
+                    </div>
                   </motion.div>
                 ))}
                 {filteredMatches.length === 0 && searchQuery && (
@@ -210,6 +287,52 @@ export default function MatchesPage() {
           </section>
         </div>
       )}
-    </div>
+      </div>
+
+      {reportModalOpen && reportTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md card-premium p-6 space-y-4">
+            <div className="space-y-1">
+              <h3 className="text-xl font-black text-[var(--text-main)]">Report Match</h3>
+              <p className="text-sm text-[var(--text-secondary)] font-medium">
+                You are reporting {reportTarget.fullName || "this user"}. Please add a brief reason.
+              </p>
+            </div>
+
+            <textarea
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              placeholder="Describe what happened..."
+              className="input-modern min-h-28 resize-none"
+              maxLength={500}
+              disabled={submittingReport}
+            />
+
+            <p className="text-xs text-[var(--text-secondary)]">
+              Minimum 5 characters. {reportReason.length}/500
+            </p>
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeReportModal}
+                className="btn-secondary"
+                disabled={submittingReport}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitReport}
+                className="btn-primary"
+                disabled={submittingReport}
+              >
+                {submittingReport ? "Submitting..." : "Submit Report"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
