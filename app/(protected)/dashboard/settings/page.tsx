@@ -2,7 +2,8 @@
 
 import axios from "@/lib/api/axios";
 import { clearAuthCookies } from "@/lib/cookie";
-import { useState } from "react";
+import { AppTheme, getStoredTheme, setTheme } from "@/lib/theme";
+import { useEffect, useState } from "react";
 import {
   LogOut,
   Trash2,
@@ -10,14 +11,29 @@ import {
   ShieldCheck,
   Bell,
   Moon,
+  Sun,
   Smartphone,
-  Info,
   ChevronRight,
   Sparkles
 } from "lucide-react";
 
+type SettingsItemProps = {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onClick?: () => void;
+  dangerous?: boolean;
+};
+
 export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [theme, setThemeState] = useState<AppTheme>("light");
+
+  useEffect(() => {
+    const currentTheme =
+      getStoredTheme() ??
+      (document.documentElement.classList.contains("dark") ? "dark" : "light");
+    setThemeState(currentTheme);
+  }, []);
 
   const logout = async () => {
     await clearAuthCookies();
@@ -37,8 +53,12 @@ export default function SettingsPage() {
       alert("Your account has been successfully deleted.");
       await clearAuthCookies();
       window.location.href = "/login";
-    } catch (error: any) {
-      alert(error.message || "Failed to delete account");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert(error.message || "Failed to delete account");
+      } else {
+        alert("Failed to delete account");
+      }
     } finally {
       setIsDeleting(false);
     }
@@ -46,6 +66,11 @@ export default function SettingsPage() {
 
   const resetPassword = () => {
     window.location.href = "/forgot-password";
+  };
+
+  const selectTheme = (nextTheme: AppTheme) => {
+    setTheme(nextTheme);
+    setThemeState(nextTheme);
   };
 
   const Section = ({ title, children }: { title: string, children: React.ReactNode }) => (
@@ -59,7 +84,7 @@ export default function SettingsPage() {
     </div>
   );
 
-  const Item = ({ icon: Icon, label, color, onClick, dangerous }: any) => (
+  const Item = ({ icon: Icon, label, onClick, dangerous }: SettingsItemProps) => (
     <button
       onClick={onClick}
       className="w-full flex items-center justify-between p-5 bg-[var(--card-bg)] hover:bg-[var(--bg-secondary)] transition-all group"
@@ -96,6 +121,32 @@ export default function SettingsPage() {
           <Item icon={Bell} label="Notifications" />
           <div className="h-[1px] bg-[var(--border-color)] mx-5" />
           <Item icon={Moon} label="Appearance" />
+          <div className="px-5 pb-5">
+            <div className="grid grid-cols-2 gap-2 rounded-2xl bg-[var(--bg-secondary)] p-1">
+              <button
+                onClick={() => selectTheme("light")}
+                className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wider transition-colors ${
+                  theme === "light"
+                    ? "bg-[var(--card-bg)] text-[var(--text-main)]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-main)]"
+                }`}
+              >
+                <Sun className="h-4 w-4" />
+                Light
+              </button>
+              <button
+                onClick={() => selectTheme("dark")}
+                className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wider transition-colors ${
+                  theme === "dark"
+                    ? "bg-[var(--card-bg)] text-[var(--text-main)]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-main)]"
+                }`}
+              >
+                <Moon className="h-4 w-4" />
+                Dark
+              </button>
+            </div>
+          </div>
           <div className="h-[1px] bg-[var(--border-color)] mx-5" />
           <Item icon={Smartphone} label="App Settings" />
         </Section>
