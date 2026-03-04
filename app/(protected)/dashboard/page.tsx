@@ -112,8 +112,7 @@ export default function DashboardPage() {
       {/* Stats Row */}
       <div className="grid grid-cols-3 gap-4 mb-10">
         {[
-          { label: "Matches", val: stats.matches },
-          { label: "Unread Alerts", val: stats.unreadAlerts },
+          { label: "Matches", val: stats.matches/2 },
           { label: "Profile", val: stats.profileReady },
         ].map((stat, i) => (
           <div
