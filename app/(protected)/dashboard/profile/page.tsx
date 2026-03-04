@@ -15,7 +15,7 @@ import {
   Heart,
   Briefcase,
   GraduationCap,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getImageUrl } from "@/lib/utils/image";
@@ -23,9 +23,7 @@ import { useAuthOptions } from "@/lib/hooks/useAuthOptions";
 
 const parseArrayLike = (value: unknown): string[] => {
   if (Array.isArray(value)) {
-    return value
-      .map((item) => String(item).trim())
-      .filter(Boolean);
+    return value.map((item) => String(item).trim()).filter(Boolean);
   }
 
   if (typeof value !== "string") return [];
@@ -81,7 +79,9 @@ export default function ProfilePage() {
   const [message, setMessage] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [previewPhotos, setPreviewPhotos] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<"basics" | "discovery" | "about">("basics");
+  const [activeTab, setActiveTab] = useState<"basics" | "discovery" | "about">(
+    "basics",
+  );
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -143,9 +143,9 @@ export default function ProfilePage() {
       const selected = prev.preferredCulture || [];
       return selected.includes(culture)
         ? {
-          ...prev,
-          preferredCulture: selected.filter((c: string) => c !== culture),
-        }
+            ...prev,
+            preferredCulture: selected.filter((c: string) => c !== culture),
+          }
         : { ...prev, preferredCulture: [...selected, culture] };
     });
   };
@@ -201,7 +201,7 @@ export default function ProfilePage() {
         }
       });
 
-      console.log(data, 'ddd')
+      console.log(data, "ddd");
 
       await axios.put("/api/auth/update-profile", data, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -231,7 +231,9 @@ export default function ProfilePage() {
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             className="w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full"
           />
-          <p className="font-bold text-rose-500 animate-pulse">Setting up your profile...</p>
+          <p className="font-bold text-rose-500 animate-pulse">
+            Setting up your profile...
+          </p>
         </div>
       </div>
     );
@@ -243,8 +245,12 @@ export default function ProfilePage() {
         <Icon className="w-6 h-6" />
       </div>
       <div>
-        <h3 className="text-xl font-black text-[var(--text-main)] leading-none mb-1">{title}</h3>
-        <p className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-widest">{subtitle}</p>
+        <h3 className="text-xl font-black text-(--text-main) leading-none mb-1">
+          {title}
+        </h3>
+        <p className="text-xs font-bold text-(--text-secondary) uppercase tracking-widest">
+          {subtitle}
+        </p>
       </div>
     </div>
   );
@@ -253,19 +259,35 @@ export default function ProfilePage() {
     <div className="max-w-2xl mx-auto">
       {/* Hero Header */}
       <div className="relative mb-8 text-center pt-4">
-        <h1 className="text-4xl font-black text-gradient italic mb-2">Edit My Profile</h1>
-        <p className="text-[var(--text-secondary)] font-medium">Fine-tune your vibe and find your spark.</p>
+        <h1 className="text-4xl font-black text-gradient italic mb-2">
+          Edit My Profile
+        </h1>
+        <p className="text-(--text-secondary) font-medium">
+          Fine-tune your vibe and find your spark.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Photo Section */}
         <section className="card-premium p-6">
-          <SectionTitle icon={Camera} title="Your Photos" subtitle="Showcase your best self" />
+          <SectionTitle
+            icon={Camera}
+            title="Your Photos"
+            subtitle="Showcase your best self"
+          />
           <div className="grid grid-cols-3 gap-4">
-            <label className="aspect-[3/4] bg-[var(--bg-secondary)] border-2 border-dashed border-[var(--border-color)] rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-rose-500/5 transition-all group overflow-hidden relative">
-              <Camera className="w-8 h-8 text-[var(--text-secondary)] group-hover:text-rose-500 transition-colors" />
-              <span className="text-[10px] font-black uppercase mt-2 text-[var(--text-secondary)] group-hover:text-rose-500 transition-colors">Add Photo</span>
-              <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
+            <label className="aspect-3/4 bg-(--bg-secondary) border-2 border-dashed border-(--border-color) rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-rose-500/5 transition-all group overflow-hidden relative">
+              <Camera className="w-8 h-8 text-(--text-secondary) group-hover:text-rose-500 transition-colors" />
+              <span className="text-[10px] font-black uppercase mt-2 text-(--text-secondary) group-hover:text-rose-500 transition-colors">
+                Add Photo
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileChange}
+                className="hidden"
+              />
             </label>
 
             <AnimatePresence>
@@ -276,23 +298,32 @@ export default function ProfilePage() {
                   key={`preview-${idx}`}
                   className="aspect-[3/4] rounded-3xl overflow-hidden relative border-2 border-rose-500 shadow-lg shadow-rose-500/20"
                 >
-                  <img src={src} className="w-full h-full object-cover" alt="preview" />
+                  <img
+                    src={src}
+                    className="w-full h-full object-cover"
+                    alt="preview"
+                  />
                   <div className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-1 shadow-md">
                     <Sparkles className="w-3 h-3" />
                   </div>
                 </motion.div>
               ))}
-              {previewPhotos.length === 0 && user?.photos?.map((photo: string, idx: number) => (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  key={`saved-${idx}`}
-                  className="aspect-[3/4] rounded-3xl overflow-hidden relative group"
-                >
-                  <img src={getImageUrl(photo)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="saved" />
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </motion.div>
-              ))}
+              {previewPhotos.length === 0 &&
+                user?.photos?.map((photo: string, idx: number) => (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    key={`saved-${idx}`}
+                    className="aspect-[3/4] rounded-3xl overflow-hidden relative group"
+                  >
+                    <img
+                      src={getImageUrl(photo)}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      alt="saved"
+                    />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </motion.div>
+                ))}
             </AnimatePresence>
           </div>
           <p className="text-[10px] text-[var(--text-secondary)] mt-4 font-bold text-center uppercase tracking-wider">
@@ -303,7 +334,7 @@ export default function ProfilePage() {
         {/* Form Content */}
         <div className="card-premium overflow-hidden">
           {/* Tabs */}
-          <div className="flex border-b border-[var(--border-color)]">
+          <div className="flex border-b border-(--border-color)">
             {[
               { id: "basics", icon: User, label: "Basics" },
               { id: "discovery", icon: Target, label: "Discovery" },
@@ -313,13 +344,19 @@ export default function ProfilePage() {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-black uppercase tracking-tighter transition-all relative ${activeTab === tab.id ? "text-rose-500" : "text-[var(--text-secondary)]"
-                  }`}
+                className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-black uppercase tracking-tighter transition-all relative ${
+                  activeTab === tab.id
+                    ? "text-rose-500"
+                    : "text-(--text-secondary)"
+                }`}
               >
                 <tab.icon className="w-4 h-4" />
                 <span className="hidden sm:inline">{tab.label}</span>
                 {activeTab === tab.id && (
-                  <motion.div layoutId="profile-tab" className="absolute bottom-0 left-0 right-0 h-1 bg-rose-500" />
+                  <motion.div
+                    layoutId="profile-tab"
+                    className="absolute bottom-0 left-0 right-0 h-1 bg-rose-500"
+                  />
                 )}
               </button>
             ))}
@@ -336,36 +373,63 @@ export default function ProfilePage() {
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase text-[var(--text-secondary)] flex items-center gap-2">
+                      <label className="text-xs font-black uppercase text-(--text-secondary) flex items-center gap-2">
                         <User className="w-3 h-3" /> Full Name
                       </label>
-                      <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="input-modern" required />
+                      <input
+                        type="text"
+                        name="fullName"
+                        value={formData.fullName}
+                        onChange={handleChange}
+                        className="input-modern"
+                        required
+                      />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase text-[var(--text-secondary)] flex items-center gap-2">
+                      <label className="text-xs font-black uppercase text-(--text-secondary) flex items-center gap-2">
                         <Calendar className="w-3 h-3" /> Birthday
                       </label>
-                      <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} className="input-modern" />
+                      <input
+                        type="date"
+                        name="dateOfBirth"
+                        value={formData.dateOfBirth}
+                        onChange={handleChange}
+                        className="input-modern"
+                      />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase text-[var(--text-secondary)] flex items-center gap-2">
+                      <label className="text-xs font-black uppercase text-(--text-secondary) flex items-center gap-2">
                         <Sparkles className="w-3 h-3" /> Gender
                       </label>
-                      <select name="gender" value={formData.gender} onChange={handleChange} className="input-modern">
+                      <select
+                        name="gender"
+                        value={formData.gender}
+                        onChange={handleChange}
+                        className="input-modern"
+                      >
                         <option value="">Select</option>
                         {options.genders.map((gender) => (
-                          <option key={gender} value={gender}>{gender}</option>
+                          <option key={gender} value={gender}>
+                            {gender}
+                          </option>
                         ))}
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase text-[var(--text-secondary)] flex items-center gap-2">
+                      <label className="text-xs font-black uppercase text-(--text-secondary) flex items-center gap-2">
                         <MapPin className="w-3 h-3" /> Culture
                       </label>
-                      <select name="culture" value={formData.culture} onChange={handleChange} className="input-modern">
+                      <select
+                        name="culture"
+                        value={formData.culture}
+                        onChange={handleChange}
+                        className="input-modern"
+                      >
                         <option value="">Select</option>
                         {options.cultures.map((c) => (
-                          <option key={c} value={c}>{c}</option>
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -381,43 +445,75 @@ export default function ProfilePage() {
                   className="space-y-8"
                 >
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase text-[var(--text-secondary)] flex items-center gap-2">
+                    <label className="text-xs font-black uppercase text-(--text-secondary) flex items-center gap-2">
                       <Heart className="w-3 h-3" /> Interested In
                     </label>
-                    <select name="interestedIn" value={formData.interestedIn} onChange={handleChange} className="input-modern">
+                    <select
+                      name="interestedIn"
+                      value={formData.interestedIn}
+                      onChange={handleChange}
+                      className="input-modern"
+                    >
                       <option value="">Select</option>
                       {options.interestedIn.map((option) => (
-                        <option key={option} value={option}>{option}</option>
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
                       ))}
                     </select>
                   </div>
 
                   <div className="space-y-4">
-                    <label className="text-xs font-black uppercase text-[var(--text-secondary)]">Age Preference</label>
+                    <label className="text-xs font-black uppercase text-(--text-secondary)">
+                      Age Preference
+                    </label>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase">Min Age: {formData.minPreferredAge}</span>
-                        <input type="range" min="18" max="99" name="minPreferredAge" value={formData.minPreferredAge} onChange={handleChange} className="w-full accent-rose-500" />
+                        <span className="text-[10px] font-bold text-(--text-secondary) uppercase">
+                          Min Age: {formData.minPreferredAge}
+                        </span>
+                        <input
+                          type="range"
+                          min="18"
+                          max="99"
+                          name="minPreferredAge"
+                          value={formData.minPreferredAge}
+                          onChange={handleChange}
+                          className="w-full accent-rose-500"
+                        />
                       </div>
                       <div className="space-y-2">
-                        <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase">Max Age: {formData.maxPreferredAge}</span>
-                        <input type="range" min="18" max="99" name="maxPreferredAge" value={formData.maxPreferredAge} onChange={handleChange} className="w-full accent-rose-500" />
+                        <span className="text-[10px] font-bold text-(--text-secondary) uppercase">
+                          Max Age: {formData.maxPreferredAge}
+                        </span>
+                        <input
+                          type="range"
+                          min="18"
+                          max="99"
+                          name="maxPreferredAge"
+                          value={formData.maxPreferredAge}
+                          onChange={handleChange}
+                          className="w-full accent-rose-500"
+                        />
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <label className="text-xs font-black uppercase text-[var(--text-secondary)]">Preferred Culture</label>
+                    <label className="text-xs font-black uppercase text-(--text-secondary)">
+                      Preferred Culture
+                    </label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {options.cultures.map((c) => (
                         <button
                           key={c}
                           type="button"
                           onClick={() => handlePreferredCultureChange(c)}
-                          className={`py-3 px-4 rounded-2xl text-xs font-bold transition-all border-2 ${formData.preferredCulture.includes(c)
-                            ? "bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-500/20"
-                            : "bg-[var(--bg-secondary)] border-transparent text-[var(--text-secondary)] hover:border-rose-300"
-                            }`}
+                          className={`py-3 px-4 rounded-2xl text-xs font-bold transition-all border-2 ${
+                            formData.preferredCulture.includes(c)
+                              ? "bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-500/20"
+                              : "bg-(--bg-secondary) border-transparent text-(--text-secondary) hover:border-rose-300"
+                          }`}
                         >
                           {c}
                         </button>
@@ -435,30 +531,73 @@ export default function ProfilePage() {
                   className="space-y-6"
                 >
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase text-[var(--text-secondary)]">Your Bio</label>
-                    <textarea name="bio" value={formData.bio} onChange={handleChange} className="input-modern min-h-[120px] resize-none" placeholder="Tell your story..." />
+                    <label className="text-xs font-black uppercase text-(--text-secondary)">
+                      Your Bio
+                    </label>
+                    <textarea
+                      name="bio"
+                      value={formData.bio}
+                      onChange={handleChange}
+                      className="input-modern min-h-30 resize-none"
+                      placeholder="Tell your story..."
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase text-[var(--text-secondary)]">Interests (Separated by comma)</label>
-                    <input type="text" name="interests" value={formData.interests.join(", ")} onChange={handleInterestsChange} className="input-modern" placeholder="Hiking, Music, Travel..." />
+                    <label className="text-xs font-black uppercase text-(--text-secondary)">
+                      Interests (Separated by comma)
+                    </label>
+                    <input
+                      type="text"
+                      name="interests"
+                      value={formData.interests.join(", ")}
+                      onChange={handleInterestsChange}
+                      className="input-modern"
+                      placeholder="Hiking, Music, Travel..."
+                    />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase text-[var(--text-secondary)] flex items-center gap-2">
+                      <label className="text-xs font-black uppercase text-(--text-secondary) flex items-center gap-2">
                         <GraduationCap className="w-3 h-3" /> Education
                       </label>
-                      <input type="text" name="education" value={formData.education} onChange={handleChange} className="input-modern" />
+                      <input
+                        type="text"
+                        name="education"
+                        value={formData.education}
+                        onChange={handleChange}
+                        className="input-modern"
+                      />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase text-[var(--text-secondary)] flex items-center gap-2">
+                      <label className="text-xs font-black uppercase text-(--text-secondary) flex items-center gap-2">
                         <Briefcase className="w-3 h-3" /> Zodiac
                       </label>
-                      <select name="zodiac" value={formData.zodiac} onChange={handleChange} className="input-modern">
+                      <select
+                        name="zodiac"
+                        value={formData.zodiac}
+                        onChange={handleChange}
+                        className="input-modern"
+                      >
                         <option value="">Select</option>
-                        {["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"].map((sign) => (
-                          <option key={sign} value={sign}>{sign}</option>
+                        {[
+                          "Aries",
+                          "Taurus",
+                          "Gemini",
+                          "Cancer",
+                          "Leo",
+                          "Virgo",
+                          "Libra",
+                          "Scorpio",
+                          "Sagittarius",
+                          "Capricorn",
+                          "Aquarius",
+                          "Pisces",
+                        ].map((sign) => (
+                          <option key={sign} value={sign}>
+                            {sign}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -472,12 +611,20 @@ export default function ProfilePage() {
         {/* Action Buttons */}
         <div className="flex flex-col gap-4">
           {message && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 bg-green-500/10 border border-green-500/20 text-green-500 rounded-2xl text-center font-bold text-sm">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 bg-green-500/10 border border-green-500/20 text-green-500 rounded-2xl text-center font-bold text-sm"
+            >
               Success! Profile updated.
             </motion.div>
           )}
           {errors.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl text-center font-bold text-xs uppercase">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl text-center font-bold text-xs uppercase"
+            >
               {errors[0]}
             </motion.div>
           )}
