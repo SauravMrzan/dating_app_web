@@ -26,7 +26,7 @@ export default function AdminLayout({
     { name: "User Management", icon: Users, path: "/admin/users" },
     { name: "Create User", icon: UserPlus, path: "/admin/users/create" },
     { name: "Reports", icon: ShieldAlert, path: "/admin/reports" },
-  ];  
+  ];
 
   const handleConfirmLogout = () => {
     const confirmed = window.confirm("Are you sure you want to logout?");
@@ -39,13 +39,12 @@ export default function AdminLayout({
     <div className="flex min-h-screen bg-[#F8F9FA]">
       {/* SIDEBAR - Clean, solid, and professional */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-6 flex items-center gap-3 border-b border-gray-50">
-          <div className="bg-[#D32F2F] p-2 rounded-lg">
-            <ShieldCheck className="text-white" size={20} />
-          </div>
-          <span className="font-bold text-gray-800 tracking-tight">
-            Admin Portal
-          </span>
+        <div className="p-6 flex items-center justify-center border-b border-gray-50">
+          <img
+            src="/images/logoright.png"
+            alt="Admin"
+            className="h-40 object-contain"
+          />
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
@@ -68,7 +67,7 @@ export default function AdminLayout({
           })}
         </nav>
 
-         {/* LOGOUT */}
+        {/* LOGOUT */}
         <div className="p-4 border-t border-gray-50">
           <form ref={logoutFormRef} action={handleLogout}>
             <button
