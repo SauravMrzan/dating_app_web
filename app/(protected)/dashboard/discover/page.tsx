@@ -9,9 +9,14 @@ import {
   RotateCcw,
   Info,
   MapPin,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useTransform,
+} from "framer-motion";
 import { getImageUrl } from "@/lib/utils/image";
 
 const calculateAge = (dob: string) => {
@@ -19,7 +24,10 @@ const calculateAge = (dob: string) => {
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
     age--;
   }
   return age;
@@ -29,18 +37,29 @@ const SwipeCard = ({
   profile,
   isTop,
   onSwipe,
-  triggerSwipe
+  triggerSwipe,
 }: {
-  profile: any,
-  isTop: boolean,
-  onSwipe: (dir: "like" | "dislike") => void,
-  triggerSwipe: "like" | "dislike" | null
+  profile: any;
+  isTop: boolean;
+  onSwipe: (dir: "like" | "dislike") => void;
+  triggerSwipe: "like" | "dislike" | null;
 }) => {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
-  const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0.5, 1, 1, 1, 0.5]);
+  const opacity = useTransform(
+    x,
+    [-200, -150, 0, 150, 200],
+    [0.5, 1, 1, 1, 0.5],
+  );
   const likeOpacity = useTransform(x, [50, 150], [0, 1]);
   const nopeOpacity = useTransform(x, [-50, -150], [0, 1]);
+
+  const [imgIndex, setImgIndex] = useState(0);
+  const photosLength = Math.max(1, profile?.photos?.length || 0);
+
+  useEffect(() => {
+    setImgIndex(0);
+  }, [profile?._id]);
 
   useEffect(() => {
     if (isTop && triggerSwipe) {
@@ -60,7 +79,9 @@ const SwipeCard = ({
 
   return (
     <motion.div
-      style={isTop ? { x, rotate, opacity } : { scale: 0.95, y: 10, opacity: 0.5 }}
+      style={
+        isTop ? { x, rotate, opacity } : { scale: 0.95, y: 10, opacity: 0.5 }
+      }
       drag={isTop ? "x" : false}
       dragConstraints={{ left: -1000, right: 1000 }}
       onDragEnd={handleDragEnd}
@@ -71,34 +92,67 @@ const SwipeCard = ({
         x: x.get() > 0 ? 1000 : -1000,
         opacity: 0,
         scale: 0.5,
-        transition: { duration: 0.4, ease: "easeIn" }
+        transition: { duration: 0.4, ease: "easeIn" },
       }}
     >
-      <div className="relative w-full h-full rounded-[40px] overflow-hidden shadow-2xl border-4 border-white bg-[var(--card-bg)]">
+      <div className="relative w-full h-full rounded-[40px] overflow-hidden shadow-2xl border-4 border-white bg-(--card-bg)">
         <img
-          src={getImageUrl(profile.photos?.[0])}
+          src={getImageUrl(profile.photos?.[imgIndex] ?? profile.photos?.[0])}
           alt={profile.fullName}
           className="w-full h-full object-cover"
         />
 
+        {/* Image navigation button + counter */}
+        <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-black/40 rounded-full px-2 py-1 backdrop-blur-md">
+            <span className="text-xs text-white/80">
+              {imgIndex + 1}/{photosLength}
+            </span>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setImgIndex((prev) => (prev + 1) % photosLength);
+            }}
+            className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white shadow-md"
+            title="Next image"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
         {/* Swipe Indicators */}
         {isTop && (
           <>
-            <motion.div style={{ opacity: likeOpacity }} className="absolute top-10 left-10 border-4 border-green-500 rounded-xl px-4 py-2 rotate-[-20deg] z-20 pointer-events-none">
-              <span className="text-4xl font-black text-green-500 uppercase">LIKE</span>
+            <motion.div
+              style={{ opacity: likeOpacity }}
+              className="absolute top-10 left-10 border-4 border-green-500 rounded-xl px-4 py-2 rotate-[-20deg] z-20 pointer-events-none"
+            >
+              <span className="text-4xl font-black text-green-500 uppercase">
+                LIKE
+              </span>
             </motion.div>
-            <motion.div style={{ opacity: nopeOpacity }} className="absolute top-10 right-10 border-4 border-rose-500 rounded-xl px-4 py-2 rotate-[20deg] z-20 pointer-events-none">
-              <span className="text-4xl font-black text-rose-500 uppercase">NOPE</span>
+            <motion.div
+              style={{ opacity: nopeOpacity }}
+              className="absolute top-10 right-10 border-4 border-rose-500 rounded-xl px-4 py-2 rotate-20 z-20 pointer-events-none"
+            >
+              <span className="text-4xl font-black text-rose-500 uppercase">
+                NOPE
+              </span>
             </motion.div>
           </>
         )}
 
         {/* Info Overlay */}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-8 pt-20">
+        <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/40 to-transparent p-8 pt-20">
           <div className="flex items-end justify-between gap-4">
             <div className="flex-1">
               <h3 className="text-3xl font-black text-white leading-tight">
-                {profile.fullName}, {profile.age || (profile.dateOfBirth ? calculateAge(profile.dateOfBirth) : "N/A")}
+                {profile.fullName},{" "}
+                {profile.age ||
+                  (profile.dateOfBirth
+                    ? calculateAge(profile.dateOfBirth)
+                    : "N/A")}
               </h3>
               <div className="flex items-center gap-2 text-white/80 mt-1 font-bold text-sm">
                 <MapPin className="w-4 h-4" />
@@ -107,16 +161,50 @@ const SwipeCard = ({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 mt-4">
-            {profile.interests?.slice(0, 3).map((interest: string) => (
-              <span key={interest} className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-[10px] font-black uppercase text-white tracking-widest border border-white/10">
-                {interest}
-              </span>
-            ))}
-            {profile.zodiac && (
-              <span className="px-3 py-1 bg-rose-500/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase text-rose-300 tracking-widest border border-rose-500/20">
-                {profile.zodiac}
-              </span>
+          {/* Dynamic content changes with image index */}
+          <div className="mt-4 text-white/90">
+            {imgIndex === 0 && (
+              <p className="text-sm font-medium">
+                {profile.bio || "No bio provided."}
+              </p>
+            )}
+
+            {imgIndex === 1 && (
+              <div className="flex flex-wrap gap-2">
+                {profile.interests?.length ? (
+                  profile.interests.map((interest: string) => (
+                    <span
+                      key={interest}
+                      className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-[10px] font-black uppercase text-white tracking-widest border border-white/10"
+                    >
+                      {interest}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-sm font-medium">No interests listed.</p>
+                )}
+              </div>
+            )}
+
+            {imgIndex === 2 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  {profile.zodiac ? (
+                    <span className="px-3 py-1 bg-rose-500/20 rounded-full text-[12px] font-black uppercase text-rose-300 tracking-widest border border-rose-500/20">
+                      {profile.zodiac}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-white/80">
+                      Zodiac not set
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-medium">
+                    {profile.education || "Education not listed."}
+                  </p>
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -130,17 +218,17 @@ const CardStack = ({
   onSwipe,
   currentIndex,
   setCurrentIndex,
-  triggerSwipe
+  triggerSwipe,
 }: {
-  profiles: any[],
-  onSwipe: (id: string, dir: "like" | "dislike") => void,
-  currentIndex: number,
-  setCurrentIndex: React.Dispatch<React.SetStateAction<number>>,
-  triggerSwipe: "like" | "dislike" | null
+  profiles: any[];
+  onSwipe: (id: string, dir: "like" | "dislike") => void;
+  currentIndex: number;
+  setCurrentIndex: React.Dispatch<React.SetStateAction<number>>;
+  triggerSwipe: "like" | "dislike" | null;
 }) => {
   const handleSwipe = (dir: "like" | "dislike") => {
     onSwipe(profiles[currentIndex]._id, dir);
-    setCurrentIndex(prev => prev + 1);
+    setCurrentIndex((prev) => prev + 1);
   };
 
   if (currentIndex >= profiles.length) return null;
@@ -148,32 +236,40 @@ const CardStack = ({
   return (
     <div className="relative w-full aspect-[3/4.5] max-w-sm mx-auto">
       <AnimatePresence mode="popLayout">
-        {profiles.slice(currentIndex, currentIndex + 2).reverse().map((profile, index) => {
-          const actualIndex = currentIndex + (profiles.slice(currentIndex, currentIndex + 2).length - 1 - index);
-          const isTop = actualIndex === currentIndex;
+        {profiles
+          .slice(currentIndex, currentIndex + 2)
+          .reverse()
+          .map((profile, index) => {
+            const actualIndex =
+              currentIndex +
+              (profiles.slice(currentIndex, currentIndex + 2).length -
+                1 -
+                index);
+            const isTop = actualIndex === currentIndex;
 
-          return (
-            <SwipeCard
-              key={profile._id}
-              profile={profile}
-              isTop={isTop}
-              onSwipe={handleSwipe}
-              triggerSwipe={isTop ? triggerSwipe : null}
-            />
-          );
-        })}
+            return (
+              <SwipeCard
+                key={profile._id}
+                profile={profile}
+                isTop={isTop}
+                onSwipe={handleSwipe}
+                triggerSwipe={isTop ? triggerSwipe : null}
+              />
+            );
+          })}
       </AnimatePresence>
     </div>
   );
 };
-
 
 export default function DiscoverPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [triggerSwipe, setTriggerSwipe] = useState<"like" | "dislike" | null>(null);
+  const [triggerSwipe, setTriggerSwipe] = useState<"like" | "dislike" | null>(
+    null,
+  );
   const hasMoreProfiles = currentIndex < profiles.length;
 
   useEffect(() => {
@@ -184,7 +280,9 @@ export default function DiscoverPage() {
         setProfiles(res.data.data || []);
         setErrorMessage(null);
       } catch (error: any) {
-        setErrorMessage(error.response?.data?.message || "Something went wrong");
+        setErrorMessage(
+          error.response?.data?.message || "Something went wrong",
+        );
       } finally {
         setLoading(false);
       }
@@ -209,7 +307,7 @@ export default function DiscoverPage() {
 
   const handleRewind = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(prev => prev - 1);
+      setCurrentIndex((prev) => prev - 1);
     }
   };
 
@@ -240,8 +338,12 @@ export default function DiscoverPage() {
       {/* Top Bar */}
       <div className="flex justify-between items-center mb-8 pt-2">
         <div>
-          <h2 className="text-3xl font-black text-gradient italic tracking-tighter">Discover</h2>
-          <p className="text-[10px] font-black uppercase text-[var(--text-secondary)] tracking-[0.2em]">New people nearby</p>
+          <h2 className="text-3xl font-black text-gradient italic tracking-tighter">
+            Discover
+          </h2>
+          <p className="text-[10px] font-black uppercase text-(--text-secondary) tracking-[0.2em]">
+            New people nearby
+          </p>
         </div>
       </div>
 
@@ -252,12 +354,12 @@ export default function DiscoverPage() {
           </div>
           <div className="space-y-2">
             <h3 className="text-xl font-black">Profile Incomplete</h3>
-            <p className="text-sm text-[var(--text-secondary)] font-medium">To keep things fair, you need to add at least one photo and a bio before you can see others.</p>
+            <p className="text-sm text-(--text-secondary) font-medium">
+              To keep things fair, you need to add at least one photo and a bio
+              before you can see others.
+            </p>
           </div>
-          <Link
-            href="/dashboard/profile"
-            className="btn-primary w-full"
-          >
+          <Link href="/dashboard/profile" className="btn-primary w-full">
             Finish Profile
           </Link>
         </div>
@@ -286,26 +388,33 @@ export default function DiscoverPage() {
               title="Swipe left"
             >
               <ChevronLeft className="w-6 h-6 stroke-[3px]" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Left</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">
+                Left
+              </span>
             </button>
             <button
               onClick={() => handleManualSwipe("like")}
               className="w-24 h-14 bg-gradient-primary rounded-2xl flex items-center justify-center gap-2 text-white shadow-[0_10px_30px_rgba(244,63,94,0.4)] hover:scale-105 active:scale-95 transition-all"
               title="Swipe right"
             >
-              <span className="text-[10px] font-black uppercase tracking-widest">Right</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">
+                Right
+              </span>
               <ChevronRight className="w-6 h-6 stroke-[3px]" />
             </button>
           </div>
         </div>
       ) : (
         <div className="card-premium p-12 text-center flex flex-col items-center gap-6">
-          <div className="w-20 h-20 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center">
-            <Sparkles className="w-10 h-10 text-[var(--text-secondary)]" />
+          <div className="w-20 h-20 bg-(--bg-secondary) rounded-full flex items-center justify-center">
+            <Sparkles className="w-10 h-10 text-(--text-secondary)" />
           </div>
           <div className="space-y-2">
             <h3 className="text-xl font-black">No more sparks!</h3>
-            <p className="text-sm text-[var(--text-secondary)] font-medium">You&apos;ve seen everyone in your area. Try expanding your search distance or check back later.</p>
+            <p className="text-sm text-(--text-secondary) font-medium">
+              You&apos;ve seen everyone in your area. Try expanding your search
+              distance or check back later.
+            </p>
           </div>
           <button
             onClick={() => setCurrentIndex(0)}
